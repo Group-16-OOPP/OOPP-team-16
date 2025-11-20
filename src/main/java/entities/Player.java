@@ -4,7 +4,9 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+
 import javax.imageio.ImageIO;
+
 import static utilz.Constants.PlayerConstants.GetSpriteAmount;
 import static utilz.Constants.PlayerConstants.IDLE;
 import static utilz.Constants.PlayerConstants.JUMPING;
@@ -16,10 +18,10 @@ public class Player extends Entity{
     private int aniTick, aniIndex, aniSpeed = 30;
     private int playerAction = IDLE;
     private boolean left,up,right,down;
-    private boolean moving = false, jumping = false;
+    private boolean moving = false, jump = false, isjumping = false;
     private float playerSpeed = 1.0f;
     
-    // Jumping mechanics
+    // jump mechanics
     private float airSpeedY = 0f;
     private float gravity = 0.04f;
     private float jumpSpeed = -2.5f;
@@ -38,7 +40,7 @@ public class Player extends Entity{
         setAnimation();
     }
     public void render(Graphics g){
-        g.drawImage(animation[playerAction][aniIndex], (int)x, (int)y,64,64, null);
+        g.drawImage(animation[playerAction][aniIndex], (int)x, (int)y,175,175, null);
     }
 
     private void setAnimation() {
@@ -51,7 +53,7 @@ public class Player extends Entity{
             playerAction = IDLE;
         }
 
-        if (jumping) {
+        if (jump) {
             playerAction = JUMPING;
         }
 
@@ -72,7 +74,6 @@ public class Player extends Entity{
             aniIndex ++;
             if (aniIndex >= GetSpriteAmount(playerAction)) {
                 aniIndex = 0;
-                jumping = false;
             }
         }
     }
@@ -89,22 +90,23 @@ public class Player extends Entity{
             moving = true;
         }
 
-        // Jumping mechanics
-        if (jumping) {
+        // jump mechanics
+        if (jump) {
             // Apply gravity
             airSpeedY += gravity;
             y += airSpeedY;
+            System.out.println("y is:" + y + "groundy is:" + groundY);
             
             // Check if landed back on ground
             if (y >= groundY) {
                 y = groundY;
                 airSpeedY = 0f;
-                jumping = false;
+                jump = false;
             }
         }
         
-        // Vertical movement (only when not jumping)
-        if (!jumping) {
+        // Vertical movement (only when not jump)
+        if (!jump) {
             if (down && !up) {
                 y += playerSpeed;
                 moving = true;
@@ -120,10 +122,11 @@ public class Player extends Entity{
             if (is != null) {
                 BufferedImage img = ImageIO.read(is);
                 //Storleken på spritesheet
-                animation = new BufferedImage[9][8];
+                animation = new BufferedImage[2][8];
                 for (int j = 0; j < animation.length; j++) {
                     for (int i = 0; i < animation[j].length; i++) {
-                        animation[j][i] = img.getSubimage(i*32, j*32, 32, 32);
+                        //sprite size
+                        animation[j][i] = img.getSubimage(i*175, j*175, 175, 175);
                     }
                 }
             } else {
@@ -147,9 +150,10 @@ public class Player extends Entity{
         up = false;
     }
 
-    public void setJump(boolean jump){
-        if (jump && !jumping && y >= groundY) {
-            this.jumping = true;
+    public void setJump(boolean isJump){
+        if (isJump && !jump && y >= groundY) {
+            this.jump = true;
+            this.isjumping = true;
             this.airSpeedY = jumpSpeed;
         }
     }
