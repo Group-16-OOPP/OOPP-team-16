@@ -2,6 +2,7 @@ package main;
 
 import java.awt.Graphics;
 
+import Levels.LevelManager;
 import entities.Player;
 
 public class Game implements Runnable{
@@ -13,32 +14,50 @@ public class Game implements Runnable{
    private final int UPS_SET = 200;
 
    private Player player;
+   private LevelManager levelManager;
 
-    public Game() {
-      initClasses();
-      gamePanel = new GamePanel(this);
-      gameWindow = new GameWindow(gamePanel);
-      gamePanel.requestFocus();
-      
-      startGameLoop();
-    }
+   public final static int TILES_DEAFULT_SIZE = 32;
+   public final static float  SCALE = 1.0f;
+   public final static int  TILES_IN_WIDTH = 40;
+   public final static int  TILES_IN_HEIGHT = 25;
+   public final static int  TILES_SIZE = (int)(TILES_DEAFULT_SIZE * SCALE);
+   public final static int  GAME_WIDTH = TILES_SIZE * TILES_IN_WIDTH;
+   public final static int  GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
 
-    private void initClasses() {
-      player = new Player(200,400);
-    }
+  public Game() {
+    initClasses();
+    gamePanel = new GamePanel(this);
+    gameWindow = new GameWindow(gamePanel);
+    gamePanel.requestFocus();
+    
+    startGameLoop();
+  }
 
-    private void startGameLoop(){
-      gametThread = new Thread(this);
-      gametThread.start();
-    }
+  private void initClasses() {
+    levelManager = new LevelManager(this);
+    player = new Player(200,550, (int)(32 * SCALE),(int)(32 * SCALE));
+    player.loadLvlData(levelManager.getCurrentLvl().getLevelData());
 
-    private void update() {
-      player.update();
-    }
+  }
 
-    public void render(Graphics g){
-      player.render(g);
-    }
+  private void update() {
+    player.update();
+    levelManager.update();
+  }
+
+  public void render(Graphics g){
+    levelManager.draw(g);
+    player.render(g);
+  }
+
+  private void startGameLoop(){
+    gametThread = new Thread(this);
+    gametThread.start();
+  }
+
+
+
+
 
     @Override
     public void run() {
