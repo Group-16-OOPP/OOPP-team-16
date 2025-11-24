@@ -2,45 +2,97 @@ package entities;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 
-import javax.imageio.ImageIO;
-
+import main.Game;
 import static utilz.Constants.PlayerConstants.GetSpriteAmount;
 import static utilz.Constants.PlayerConstants.IDLE;
 import static utilz.Constants.PlayerConstants.JUMPING;
 import static utilz.Constants.PlayerConstants.RUNNING;
+import static utilz.HelpMethods.CanMoveHere;
+import static utilz.HelpMethods.GetEntityXPosNextToWall;
+import static utilz.HelpMethods.GetEntityYPosUnderOrAbove;
+import static utilz.HelpMethods.IsEntityDead;
+import static utilz.HelpMethods.IsEntityOnFloor;
+import utilz.LoadSave;
 
 public class Player extends Entity{
 
     private BufferedImage[][] animation;
-    private int aniTick, aniIndex, aniSpeed = 30;
+    private int aniTick, aniIndex, aniSpeed = 15;
     private int playerAction = IDLE;
-    private boolean left,up,right,down;
-    private boolean moving = false, jump = false, isjumping = false;
+    private boolean left,right;
+    private boolean moving = false, jump = false;
     private float playerSpeed = 1.0f;
-    
-    // jump mechanics
-    private float airSpeedY = 0f;
-    private float gravity = 0.04f;
-    private float jumpSpeed = -2.5f;
-    private float groundY;
 
-    public Player(float x, float y) {
-        super(x, y);
-        this.groundY = y;
+    //Jumping / gravity mechanic
+    private float airSpeed = 0f;
+    private float gravity = 0.04f * Game.SCALE;
+    private float jumpSpeed = -2.5f;
+    private float fallSpeedAfterCollision = 0.5f * Game.SCALE;
+    private boolean inAir = false;
+
+    private int[][] lvlData;
+    private float xDrawOffset = 9.5f * Game.SCALE;
+    private float yDrawOffset = 8.25f * Game.SCALE;
+    private float spawnX, spawnY;
+    private boolean isDead = false;
+    private long deathTime = 0;
+    private static final long RESPAWN_DELAY_MS = 500; // 2 seconds
+    
+    
+    
+    
+    
+
+    public Player(float x, float y, int width, int height) {
+        super(x, y, width, height);
         loadAnimatons();
+        initHitbox(x, y , 12*Game.SCALE, 20*Game.SCALE);
+        spawnX = x;
+        spawnY = y;
         
     }
 
     public void update(){
+        if (isDead) {
+            if (System.currentTimeMillis() - deathTime >= RESPAWN_DELAY_MS) {
+                respawn();
+            }
+            return;
+        }
+        if (IsEntityDead(hitbox, lvlData)) {
+            die();
+            return;
+        }
         updatePos();
         updateAnimationTick();
         setAnimation();
     }
+    
+    private void die() {
+        isDead = true;
+        deathTime = System.currentTimeMillis();
+        hitbox.x = 2000;
+        hitbox.y = 2000;
+        resetInAir();
+        resetDirBooleans();
+    }
+    
+    private void respawn() {
+        isDead = false;
+        hitbox.x = spawnX;
+        hitbox.y = spawnY;
+
+        resetDirBooleans();
+        airSpeed = 0;
+        moving = false;
+        jump = false;
+
+        inAir = !IsEntityOnFloor(hitbox, lvlData);
+    }
     public void render(Graphics g){
-        g.drawImage(animation[playerAction][aniIndex], (int)x, (int)y,175,175, null);
+        g.drawImage(animation[playerAction][aniIndex], (int)(hitbox.x - xDrawOffset), (int)(hitbox.y - yDrawOffset),width,height, null);
+        //drawHitbox(g);
     }
 
     private void setAnimation() {
@@ -80,82 +132,87 @@ public class Player extends Entity{
 
     private void updatePos() {
         moving = false;
-        
-        // Horizontal movement
-        if (left && !right) {
-            x -= playerSpeed;
-            moving = true;
-        }else if(right && !left){
-            x += playerSpeed;
-            moving = true;
-        }
-
-        // jump mechanics
         if (jump) {
-            // Apply gravity
-            airSpeedY += gravity;
-            y += airSpeedY;
-            System.out.println("y is:" + y + "groundy is:" + groundY);
-            
-            // Check if landed back on ground
-            if (y >= groundY) {
-                y = groundY;
-                airSpeedY = 0f;
-                jump = false;
-            }
+            jump();
         }
-        
-        // Vertical movement (only when not jump)
-        if (!jump) {
-            if (down && !up) {
-                y += playerSpeed;
-                moving = true;
+        if (!left && !right && !inAir)
+            return;
+        float xSpeed = 0;
+
+
+        if (left)
+            xSpeed -= playerSpeed;
+
+        if(right)
+            xSpeed += playerSpeed;
+
+        if (!inAir)
+            if (!IsEntityOnFloor(hitbox,lvlData))
+                inAir = true;
+
+        if (inAir) {
+            if (CanMoveHere(hitbox.x, hitbox.y + airSpeed, hitbox.width, hitbox.height, lvlData)) {
+                hitbox.y += airSpeed;
+                airSpeed += gravity;
+                updateXPos(xSpeed);
+            }else{
+                hitbox.y = GetEntityYPosUnderOrAbove(hitbox,airSpeed);
+                if (airSpeed > 0) {
+                    resetInAir();
+                }else{
+                    airSpeed = fallSpeedAfterCollision;
+                }
+                updateXPos(xSpeed);
             }
+        }else{
+            updateXPos(xSpeed);
+        }
+        moving = true;
+    }
+
+    private void jump() {
+        if (inAir)
+            return;
+        inAir = true;
+        airSpeed = jumpSpeed;
+    }
+
+    private void resetInAir() {
+        inAir = false;
+        airSpeed = 0;
+    }
+
+    private void updateXPos(float xSpeed) {
+        if(CanMoveHere(hitbox.x + xSpeed, hitbox.y, hitbox.width, hitbox.height, lvlData)){
+            hitbox.x += xSpeed;
+        }else{
+            hitbox.x = GetEntityXPosNextToWall(hitbox,xSpeed);
         }
     }
 
     private void loadAnimatons() {
 
-        InputStream is = getClass().getResourceAsStream("/Character.png");
-
-        try {
-            if (is != null) {
-                BufferedImage img = ImageIO.read(is);
-                //Storleken på spritesheet
-                animation = new BufferedImage[2][8];
-                for (int j = 0; j < animation.length; j++) {
-                    for (int i = 0; i < animation[j].length; i++) {
-                        //sprite size
-                        animation[j][i] = img.getSubimage(i*175, j*175, 175, 175);
-                    }
-                }
-            } else {
-                System.err.println("Could not load image: /Character.png");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                is.close();
-            }catch (IOException e) {
-                e.printStackTrace();
+        BufferedImage img = LoadSave.GetSpriteAtlas(LoadSave.PLAYER_ATLAS);
+        //Storleken på spritesheet
+        animation = new BufferedImage[2][8];
+        for (int j = 0; j < animation.length; j++) {
+            for (int i = 0; i < animation[j].length; i++) {
+                //sprite size
+                animation[j][i] = img.getSubimage(i*32, j*32, 32, 32);
             }
         }
+
+    }
+
+    public void loadLvlData(int[][] lvlData){
+        this.lvlData = lvlData;
+        if (!IsEntityOnFloor(hitbox, lvlData))
+            inAir = true;
     }
 
     public void resetDirBooleans() {
         left = false;
         right = false;
-        down = false;
-        up = false;
-    }
-
-    public void setJump(boolean isJump){
-        if (isJump && !jump && y >= groundY) {
-            this.jump = true;
-            this.isjumping = true;
-            this.airSpeedY = jumpSpeed;
-        }
     }
 
     public boolean isLeft() {
@@ -173,5 +230,11 @@ public class Player extends Entity{
     public void setRight(boolean right) {
         this.right = right;
     }
+
+    public void setJump(boolean jump) {
+        this.jump = jump;
+    }
+
+
 
 }
