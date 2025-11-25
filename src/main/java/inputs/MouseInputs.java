@@ -4,14 +4,28 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-public class MouseInputs implements MouseListener,MouseMotionListener{
+import main.GamePanel;
+import main.Game;
+
+public class MouseInputs implements MouseListener, MouseMotionListener {
+
+    private GamePanel panel;
+
+    public void setGamePanel(GamePanel panel) {
+        this.panel = panel;
+    }
 
     @Override
     public void mouseDragged(MouseEvent arg0) {
     }
 
     @Override
-    public void mouseMoved(MouseEvent arg0) {
+    public void mouseMoved(MouseEvent e) {
+        if (panel == null) return;
+        Game game = panel.getGame();
+        if (game.getGameState() == Game.GameState.MENU) {
+            game.mainMenu.mouseMoved(e.getX(), e.getY());
+        }
     }
 
     @Override
@@ -27,7 +41,12 @@ public class MouseInputs implements MouseListener,MouseMotionListener{
     }
 
     @Override
-    public void mousePressed(MouseEvent arg0) {
+    public void mousePressed(MouseEvent e) {
+        if (panel == null) return;
+        Game game = panel.getGame();
+        if (game.getGameState() == Game.GameState.MENU) {
+            game.mainMenu.mousePressed(e.getX(), e.getY());
+        }
     }
 
     @Override
