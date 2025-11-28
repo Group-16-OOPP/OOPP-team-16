@@ -1,13 +1,25 @@
 package utilz;
 
 import java.awt.geom.Rectangle2D;
+import java.util.HashSet;
+import java.util.Set;
 
 import main.Game;
 import static main.Game.GAME_HEIGHT;
 
 public class HelpMethods {
 
-    
+    // transparent/passable
+    private static final Set<Integer> NON_SOLID_TILES = new HashSet<Integer>() {{
+        add(0); add(1); add(2);
+        add(9); add(10); add(11);
+        add(18); add(19); add(20);
+        add(27); add(28); add(29);
+        add(36); add(37); add(38);
+        add(39); add(41);
+        add(45); add(46); add(47);
+        add(80);
+    }};
 
     public static boolean CanMoveHere(float x,float y,float width,float height,int[][] lvlData){
         if (!IsSolid(x, y, lvlData))
@@ -28,11 +40,7 @@ public class HelpMethods {
         float yIndex = y / Game.TILES_SIZE;
 
         int value = lvlData[(int) yIndex][(int) xIndex];
-
-        //antal tiles - ej negativa - genomskinliga tilen
-        if (value == 80 || value == 39 || value == 41 || value == 45 || value == 46)
-            return false;
-        return true;
+        return !NON_SOLID_TILES.contains(value);
     }
 
     public static float GetEntityXPosNextToWall(Rectangle2D.Float hitbox, float xSpeed){
@@ -64,8 +72,8 @@ public class HelpMethods {
 
     public static boolean IsEntityOnFloor(Rectangle2D.Float hitbox, int[][] lvlData){
         //kolla pixel nere höger och vänster
-        if (hitbox.y + hitbox.height >= GAME_HEIGHT - 5) {
-                    System.out.println("DIE");
+        if (hitbox.y + hitbox.height >= GAME_HEIGHT - 32) {
+                return false;
             }
         if (!IsSolid(hitbox.x, hitbox.y + hitbox.height + 1, lvlData)) {
             if (!IsSolid(hitbox.x + hitbox.width, hitbox.y + hitbox.height + 1, lvlData)) {
@@ -115,6 +123,41 @@ public class HelpMethods {
             }
         }
         return false;
+    }
+
+
+    public static float findGroundY(float x, float y, int spriteHeight, int[][] lvlData) {
+        // Align Y to grid
+        float alignedY = (float)(Math.floor(y / Game.TILES_SIZE) * Game.TILES_SIZE);
+        
+        // Create a temporary hitbox to check if already on ground
+        Rectangle2D.Float tempHitbox = new Rectangle2D.Float(x, alignedY, Game.TILES_SIZE, spriteHeight);
+        if (IsEntityOnFloor(tempHitbox, lvlData)) {
+            return alignedY; // Already on ground
+        }
+        
+        // Search downward for the first solid tile
+        float currentY = alignedY;
+        int maxSearch = (int)(Game.GAME_HEIGHT / Game.TILES_SIZE);
+        
+        for (int i = 0; i < maxSearch; i++) {
+            currentY += Game.TILES_SIZE;
+            tempHitbox.y = currentY;
+            
+            if (IsEntityOnFloor(tempHitbox, lvlData)) {
+                // Found ground, position sprite on top of it (already grid-aligned)
+                return currentY;
+            }
+            
+            // Check if we've gone past the bottom of the level
+            if (currentY + spriteHeight >= GAME_HEIGHT - 1000) {
+                // No valid ground found - would fall off screen
+                return -1;
+            }
+        }
+        
+        // No valid ground found
+        return -1;
     }
 
 }

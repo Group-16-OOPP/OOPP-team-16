@@ -36,7 +36,6 @@ public class Player extends Entity{
     private boolean inAir = false;
 
     private int[][] lvlData;
-    private Levels.Level currentLevel;
     private float xDrawOffset = 9.5f * Game.SCALE;
     private float yDrawOffset = 8.25f * Game.SCALE;
     private float spawnX, spawnY;
@@ -45,6 +44,7 @@ public class Player extends Entity{
     private static final long RESPAWN_DELAY_MS = 500;
     private boolean reachedLevelEnd = false;
     private int currDeathCount = 0;
+    private Levels.Level currentLevel;
     
     
     
@@ -67,7 +67,9 @@ public class Player extends Entity{
             }
             return;
         }
-        if (IsEntityDead(hitbox, lvlData) || (currentLevel != null && currentLevel.checkSpikeCollision(this))) {
+        if (IsEntityDead(hitbox, lvlData) || 
+            (currentLevel != null && currentLevel.checkSpikeCollision(this)) ||
+            (currentLevel != null && currentLevel.checkTriggerSpikeCollision(this))) {
             die();
             return;
         }
@@ -91,6 +93,13 @@ public class Player extends Entity{
         currDeathCount += 1;
         isDead = true;
         deathTime = System.currentTimeMillis();
+        
+        // Record death position before moving player off screen
+        if (currentLevel != null) {
+            BufferedImage deathSprite = LoadSave.GetSpriteAtlas(LoadSave.PLAYER_DEAD);
+            currentLevel.recordDeathPosition(hitbox.x - xDrawOffset, hitbox.y - yDrawOffset, deathSprite);
+        }
+        
         hitbox.x = 2000;
         hitbox.y = 2000;
         resetInAir();
@@ -180,28 +189,24 @@ public class Player extends Entity{
             xSpeed += playerSpeed;
 
         if (!inAir) {
-            boolean onTileFloor = IsEntityOnFloor(hitbox, lvlData);
-            boolean onPlatform = currentLevel != null && currentLevel.isOnSolidPlatform(hitbox);
-            if (!onTileFloor && !onPlatform)
+            if (!IsEntityOnFloor(hitbox,lvlData) && (currentLevel == null || !currentLevel.isOnSolidPlatform(hitbox)))
                 inAir = true;
         }
 
         if (inAir) {
             if (CanMoveHere(hitbox.x, hitbox.y + airSpeed, hitbox.width, hitbox.height, lvlData)) {
-                // Check for solid platform collision when falling
-                if (airSpeed > 0 && currentLevel != null) {
-                    float platformY = currentLevel.getSolidPlatformY(hitbox);
-                    if (platformY >= 0 && hitbox.y + airSpeed >= platformY) {
-                        hitbox.y = platformY;
-                        resetInAir();
-                        updateXPos(xSpeed);
-                        moving = true;
-                        return;
-                    }
-                }
                 hitbox.y += airSpeed;
                 airSpeed += gravity;
                 updateXPos(xSpeed);
+                
+                // Check if landed on solid platform
+                if (currentLevel != null && airSpeed > 0) {
+                    float platformY = currentLevel.getSolidPlatformY(hitbox, airSpeed);
+                    if (platformY >= 0) {
+                        hitbox.y = platformY;
+                        resetInAir();
+                    }
+                }
             }else{
                 hitbox.y = GetEntityYPosUnderOrAbove(hitbox,airSpeed);
                 if (airSpeed > 0) {
@@ -257,10 +262,6 @@ public class Player extends Entity{
             inAir = true;
     }
     
-    public void setCurrentLevel(Levels.Level level) {
-        this.currentLevel = level;
-    }
-    
     public void setSpawnPoint(float x, float y) {
         this.spawnX = x;
         this.spawnY = y;
@@ -284,10 +285,6 @@ public class Player extends Entity{
     
     public void resetDeathCount() {
         currDeathCount = 0;
-    }
-
-    public boolean isDead() {
-        return isDead;
     }
 
     public void resetDirBooleans() {
@@ -314,7 +311,10 @@ public class Player extends Entity{
     public void setJump(boolean jump) {
         this.jump = jump;
     }
-
-
-
+    
+    public void setCurrentLevel(Levels.Level level) {
+        this.currentLevel = level;
+    }
 }
+
+

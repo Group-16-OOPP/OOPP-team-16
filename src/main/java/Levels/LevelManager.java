@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import entities.SpawnPlatform;
 import main.Game;
 import static main.Game.GAME_HEIGHT;
 import static main.Game.GAME_WIDTH;
@@ -15,6 +16,8 @@ public class LevelManager {
     private Game game;
     private BufferedImage[] levelSprite;
     private BufferedImage[] objectSprite;
+    private BufferedImage spawnTube;
+    private BufferedImage deathSprite;
     private List<Level> levels;
     private int currentLevelIndex = 0;
 
@@ -27,28 +30,55 @@ public class LevelManager {
     
     private void buildAllLevels() {
         levels = new ArrayList<>();
+        spawnTube = LoadSave.GetSpriteAtlas(LoadSave.SPAWN_TUBE);
+        deathSprite = LoadSave.GetSpriteAtlas(LoadSave.PLAYER_DEAD);
         
         // Level 1
         Level level1 = new Level(
             LoadSave.GetLevelData(LoadSave.LEVEL_ONE_DATA),
             LoadSave.GetLevelObstacleData(LoadSave.LEVEL_ONE_OBSTACLE_DATA),
             LoadSave.GetLevelObjData(LoadSave.LEVEL_ONE_OBJ_DATA),
-            200, 550);
-        level1.createTriggerPlatformsFromTile(1,73, 0, 200, 2f, levelSprite, true, false);
-        level1.createTriggerPlatformsFromTile(2,72, 100, 50, 2f, levelSprite, true, true);
-        // Create spikes from tile ID 3, using sprite 74 (adjust sprite ID to your spike sprite)
+            230, 600);
+        level1.createGroupedTriggerPlatformFromTile(1, 32, 0,2f, levelSprite, true, true);
+        level1.createGroupedTriggerPlatformFromTile(2, 32, 0,2f, levelSprite, true, true);
         level1.createSpikesFromTile(3, 41, objectSprite);
+        level1.setSpawnPlatform(new SpawnPlatform(224, 448, TILES_SIZE * 1, TILES_SIZE * 4, 64, 3f, spawnTube));
         levels.add(level1);
         
         // Level 2
-        //Level level2 = new Level(LoadSave.GetLevelData(LoadSave.LEVEL_TWO_DATA), 100, 400);
-        // Example: create trigger platforms from tile ID 50 in level 2
-        // level2.createTriggerPlatformsFromTile(50, 100, 0, 1.5f, levelSprite);
-        //levels.add(level2);
+        Level level2 = new Level(LoadSave.GetLevelData(LoadSave.LEVEL_TWO_DATA),
+            LoadSave.GetLevelObstacleData(LoadSave.LEVEL_TWO_OBSTACLE_DATA),
+            LoadSave.GetLevelObjData(LoadSave.LEVEL_TWO_OBJ_DATA),
+            100, 400);
+        level2.setSpawnPlatform(new SpawnPlatform(96, 256, TILES_SIZE * 1, TILES_SIZE * 4, 64, 3f, spawnTube));
+        level2.createGroupedTriggerPlatformFromTile(1, 32, 0, 3f, levelSprite, false, true);
+        level2.createGroupedTriggerPlatformFromTile(3, 62, 0, 3f, levelSprite, true, true);
+        level2.createGroupedTriggerPlatformFromTile(4, -32, 32, 3f, levelSprite, false, true);
+        level2.createTriggerSpikesFromTile(2, 41, 0, -16, 5f, 100f, objectSprite, false);
+        levels.add(level2);
         
         // Level 3
-        //Level level3 = new Level(LoadSave.GetLevelData(LoadSave.LEVEL_THREE_DATA), 100, 100);
-        //levels.add(level3);
+        Level level3 = new Level(LoadSave.GetLevelData(LoadSave.LEVEL_THREE_DATA),
+            LoadSave.GetLevelObstacleData(LoadSave.LEVEL_THREE_OBSTACLE_DATA),
+            LoadSave.GetLevelObjData(LoadSave.LEVEL_THREE_OBJ_DATA),
+            100, 150);
+        level3.setSpawnPlatform(new SpawnPlatform(96, 96, TILES_SIZE * 1, TILES_SIZE * 4, 64, 3f, spawnTube));
+        level3.createTriggerSpikesFromTile(1, 41, 0, -16, 5f, 50f, objectSprite, false);
+        level3.createTriggerSpikesFromTile(2, 41, 0, -16, 5f, 50f, objectSprite, false);
+        level3.createTriggerSpikesFromTile(3, 41, 0, -16, 5f, 50f, objectSprite, false);
+        level3.createTriggerSpikesFromTile(4, 41, 0, -16, 5f, 50f, objectSprite, false);
+        level3.createTriggerSpikesFromTile(5, 42, 0, 48, 5f, 50f, objectSprite, false);
+        level3.createGroupedTriggerPlatformFromTile(6, 64, 0, 5f, levelSprite, false, true);
+        level3.createTriggerSpikesFromTile(7, 41, 0, -16, 5f, 60f, objectSprite, true);
+        level3.createTriggerSpikesFromTile(8, 41, 0, -16, 5f, 60f, objectSprite, true);
+        level3.createTriggerSpikesFromTile(9, 41, 0, -96, 2f, 50f, objectSprite, true);
+        level3.createTriggerSpikesFromTile(11, 42, 0, 48, 2f, 80f, objectSprite, true);
+        level3.createTriggerSpikesFromTile(12, 42, 0, 48, 2f, 80f, objectSprite, true);
+        level3.createTriggerSpikesFromTile(13, 42, 0, 48, 2f, 80f, objectSprite, true);
+        level3.createTriggerSpikesFromTile(14, 42, 0, 48, 2f, 80f, objectSprite, true);
+        level3.createGroupedTriggerPlatformFromTile(10, -64, 0, 5f, levelSprite, true, true);
+        level3.setSpawnPlatform(new SpawnPlatform(96, 0, TILES_SIZE * 1, TILES_SIZE * 4, 64, 3f, spawnTube));
+        levels.add(level3);
     }
 
     private void importOutsideSprites() {
@@ -61,7 +91,6 @@ public class LevelManager {
             }
         }
         
-        // Load decorational object sprites
         BufferedImage objImg = LoadSave.GetSpriteAtlas(LoadSave.OBJECT_ATLAS);
         objectSprite = new BufferedImage[48];
         for (int j = 0; j < 6; j++) {
@@ -74,9 +103,11 @@ public class LevelManager {
 
     public void draw(Graphics g){
         BufferedImage img = LoadSave.GetSpriteAtlas(LoadSave.BG_DATA);
-        g.drawImage(img, 0, 0,GAME_WIDTH,(int)(GAME_HEIGHT * 0.9f) , null); 
+        g.drawImage(img, 0, 0,GAME_WIDTH,GAME_HEIGHT , null); 
         
         Level currentLevel = getCurrentLvl();
+        currentLevel.drawTriggerSpikes(g);
+        
         for (int j = 0; j < Game.TILES_IN_HEIGHT; j++) {
             for (int i = 0; i < Game.TILES_IN_WIDTH; i++) {
                 int index = currentLevel.getSpriteIndex(i, j);
@@ -84,7 +115,13 @@ public class LevelManager {
             }
         }
         
-        // Draw decorational objects
+        currentLevel.drawPlatforms(g);
+        currentLevel.drawSpikes(g);
+        currentLevel.drawDeathSprites(g);
+    }
+    
+    public void drawObjectLayer(Graphics g) {
+        Level currentLevel = getCurrentLvl();
         for (int j = 0; j < Game.TILES_IN_HEIGHT; j++) {
             for (int i = 0; i < Game.TILES_IN_WIDTH; i++) {
                 int index = currentLevel.getObjectSpriteIndex(i, j);
@@ -93,28 +130,28 @@ public class LevelManager {
                 }
             }
         }
-        
-        // Draw moving platforms and spikes
-        currentLevel.drawPlatforms(g);
-        currentLevel.drawSpikes(g);
+    }
+    
+    public BufferedImage getDeathSprite() {
+        return deathSprite;
     }
 
     public void update(){
-        // Update moving platforms (pass player for trigger detection)
         getCurrentLvl().updatePlatforms(game.getPlayer());
+        getCurrentLvl().updateTriggerSpikes(game.getPlayer());
+        getCurrentLvl().updateSpawnPlatform();
     }
 
     public Level getCurrentLvl() {
+        //return levels.get(0); // For Testing
         return levels.get(currentLevelIndex);
     }
     
     public void loadNextLevel() {
         if (currentLevelIndex < levels.size() - 1) {
             currentLevelIndex++;
-            System.out.println("Loading level " + (currentLevelIndex + 1));
         } else {
-            System.out.println("No more levels! Game complete.");
-            // TODO: Handle game completion (e.g., show victory screen)
+            // IMPLEMENT RETURN HOME? GAME FINISHED SCREEN?s
         }
     }
     

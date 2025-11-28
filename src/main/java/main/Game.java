@@ -6,11 +6,11 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import Levels.LevelManager;
+import audio.controller.AudioController;
 import entities.Player;
 import main.states.Leaderboard;
 import main.states.MainMenu;
 import utilz.LoadSave;
-import audio.controller.AudioController;
 
 public class Game implements Runnable {
 
@@ -46,7 +46,7 @@ public class Game implements Runnable {
     private boolean scalingUp = true;
     private boolean levelLoaded = false;
     private final float TRANSITION_SPEED = 0.015f;
-
+    
     // Track player death for platform reset
     private boolean playerWasDead = false;
 
@@ -80,6 +80,7 @@ public class Game implements Runnable {
         player.setCurrentLevel(currentLevel);
         player.spawnAtLevelStart();
         currentLevel.resetPlatforms();
+        currentLevel.clearDeathPositions();
     }
 
     private void update() {
@@ -90,9 +91,13 @@ public class Game implements Runnable {
 
         switch (gameState) {
         case PLAYING:
-            // Check if player just respawned (was dead, now alive)
-            boolean playerCurrentlyDead = player.getHitbox().x > 1500; // Player moved off-screen when dead
+            boolean playerCurrentlyDead = player.getHitbox().x > 1500;
+            if (!playerWasDead && playerCurrentlyDead) {
+                // Player just died
+                levelManager.getCurrentLvl().triggerSpawnPlatform();
+            }
             if (playerWasDead && !playerCurrentlyDead) {
+                // Player just respawned
                 levelManager.getCurrentLvl().resetPlatforms();
             }
             playerWasDead = playerCurrentlyDead;
@@ -107,7 +112,7 @@ public class Game implements Runnable {
             mainMenu.update();
             break;
         case LEADERBOARD:
-            //leaderboard.update(); TODO
+            //leaderboard.update(); TODOOOO
             break;
         }
     }
@@ -149,7 +154,9 @@ public class Game implements Runnable {
         switch (gameState) {
         case PLAYING:
             levelManager.draw(g);
-            player.render(g);
+            levelManager.drawObjectLayer(g); // Draw object layer on top of everything except player
+            player.render(g); // Player on top of object layer
+            levelManager.getCurrentLvl().drawSpawnPlatform(g); // Draw in front of player
             drawHUD(g);
             break;
         case MENU:
