@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import Levels.LevelManager;
 import main.events.GameEventListener;
+import main.events.PlayerEventListener;
 import main.model.GameModel;
 import main.states.GameBaseState;
 import main.states.Leaderboard;
@@ -22,7 +23,7 @@ import main.view.GameView;
 import main.view.GameWindow;
 import utilz.LoadSave;
 
-public class Game implements Runnable {
+public class Game implements Runnable, PlayerEventListener {
 
     public static final int TILES_DEAFULT_SIZE = 32;
     public static final float SCALE = 1.0f;
@@ -63,14 +64,15 @@ public class Game implements Runnable {
     private GameView view;
 
     public Game() {
-        audioController = new AudioController();
+        audioController = AudioController.getInstance();
         initClasses();
+
+        if (currentState != null) {
+            currentState.onEnter();
+        }
         gamePanel = new GamePanel(this);
         gameWindow = new GameWindow(gamePanel);
         gamePanel.requestFocus();
-
-        //menu music
-        audioController.playMenuMusic();
 
         startGameLoop();
     }
@@ -78,7 +80,7 @@ public class Game implements Runnable {
     private void initClasses() {
         levelManager = new LevelManager(this);
         player = new Player(200, 550, (int) (32 * SCALE), (int) (32 * SCALE));
-        player.setGame(this); //Did not work without????
+        player.setPlayerEventListener(this);
         loadPlayerForCurrentLevel();
 
         model = new GameModel(player, levelManager);
@@ -243,24 +245,12 @@ public class Game implements Runnable {
         }
 
         switch (newState) {
-        case MENU -> {
-            audioController.playMenuMusic();
-            currentState = menuState;
-        }
-        case LEVEL_SELECT -> {
-            audioController.playMenuMusic();
-            currentState = levelSelectState;
-        }
-        case PLAYING -> {
-            audioController.playGameMusic();
-            currentState = playingState;
-        }
-        case LEADERBOARD -> {
-            audioController.stopAll();
-            currentState = leaderboardState;
-        }
+        case MENU -> currentState = menuState;
+        case LEVEL_SELECT -> currentState = levelSelectState;
+        case PLAYING -> currentState = playingState;
+        case LEADERBOARD -> currentState = leaderboardState;
         default -> {
-            //?
+            // needed to satisfy checkstyle
         }
         }
 
@@ -272,8 +262,13 @@ public class Game implements Runnable {
         }
     }
 
+    @Override
     public void onPlayerDeath() {
+        // reuse existing logic that was previously called from Player via Game reference
         model.onPlayerDeath();
+
+
+
         for (GameEventListener listener : gameEventListeners) {
             listener.onPlayerDeath();
         }

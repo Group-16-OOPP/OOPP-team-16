@@ -4,6 +4,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import main.Game;
+import main.events.PlayerEventListener;
 
 import static utilz.Constants.PlayerConstants.getSpriteAmount;
 import static utilz.Constants.PlayerConstants.IDLE_LEFT;
@@ -53,7 +54,8 @@ public class Player extends Entity {
     private boolean reachedLevelEnd = false;
     private int currDeathCount = 0;
     private Levels.Level currentLevel;
-    private Game game; // reference to notify game about deaths
+
+    private PlayerEventListener playerEventListener; // replaces direct Game coupling for death
 
     public Player(float x, float y, int width, int height) {
         super(x, y, width, height);
@@ -63,8 +65,8 @@ public class Player extends Entity {
         spawnY = y;
     }
 
-    public void setGame(Game game) {
-        this.game = game;
+    public void setPlayerEventListener(PlayerEventListener listener) {
+        this.playerEventListener = listener;
     }
 
     public void update() {
@@ -74,9 +76,9 @@ public class Player extends Entity {
             }
             return;
         }
-        if (isEntityDead(hitbox, lvlData) ||
-                (currentLevel != null && currentLevel.checkSpikeCollision(this)) ||
-                (currentLevel != null && currentLevel.checkTriggerSpikeCollision(this))) {
+        if (isEntityDead(hitbox, lvlData)
+                || (currentLevel != null && currentLevel.checkSpikeCollision(this))
+                || (currentLevel != null && currentLevel.checkTriggerSpikeCollision(this))) {
             die();
             return;
         }
@@ -98,8 +100,8 @@ public class Player extends Entity {
 
     private void die() {
         currDeathCount += 1;
-        if (game != null) {
-            game.onPlayerDeath();
+        if (playerEventListener != null) {
+            playerEventListener.onPlayerDeath();
         }
         isDead = true;
         deathTime = System.currentTimeMillis();
