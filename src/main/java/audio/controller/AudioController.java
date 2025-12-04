@@ -10,18 +10,21 @@ import javafx.scene.media.MediaPlayer;
 public class AudioController {
     //has to be static to be called on by keyboardinputs later.
     //add more down here if needed (sound effects).
+
     private static AudioClip deadSound;
     private static AudioClip jumpSound;
     private static AudioClip nextLevelSound;
     private static AudioClip platformSound;
     private static AudioClip spawnSound;
+    private static AudioController audioController = null;
+
     private static boolean javaFXStarted = false;
 
     private MediaPlayer menuPlayer;
     private MediaPlayer gamePlayer;
     private MediaPlayer LeaderboardPlayer;
-
     private MediaPlayer activePlayer;
+
 
     //has to be static to be called on by keyboardinputs later.
     //add more down here if needed (sound effects).
@@ -34,9 +37,12 @@ public class AudioController {
         loadResources();
     }
 
-    //public static AudioController getInstance() {
-    //    return this.AudioController;
-    //}
+    public static synchronized AudioController getInstance() {
+        if (audioController == null) {
+            audioController = new AudioController();
+        }
+        return audioController;
+    }
 
     private void startJavaFX() {
         if (javaFXStarted) {
@@ -76,57 +82,84 @@ public class AudioController {
         return new AudioClip(jumpPath.toString());
     }
 
+    /**
+     * Starts playing menu music, stopping any other active background track first.
+     */
     public void playMenuMusic() {
-        //Platform.runLater(() -> changeState(menuPlayer));
+        changeState(menuPlayer);
     }
 
+    /**
+     * Starts playing game music, stopping any other active background track first.
+     */
     public void playGameMusic() {
-        //Platform.runLater(() -> changeState(gamePlayer));
+        changeState(gamePlayer);
     }
 
     public void playJump() {
-        jumpSound.play();
+        if (jumpSound != null) {
+            jumpSound.play();
+        }
     }
 
     public void playDead() {
-        deadSound.play();
+        if (deadSound != null) {
+            deadSound.play();
+        }
     }
 
     public void playNextLevel() {
-        nextLevelSound.play();
+        if (nextLevelSound != null) {
+            nextLevelSound.play();
+        }
     }
 
     public void playRespawn() {
-        spawnSound.play();
+        if (spawnSound != null) {
+            spawnSound.play();
+        }
     }
 
     public void playPlatformSound() {
-        platformSound.play();
+        if (platformSound != null) {
+            platformSound.play();
+        }
     }
 
+    /**
+     * Stops all background music players, if they are currently playing,
+     * and clears the activePlayer reference.
+     */
     public void stopAll() {
-        Platform.runLater(() -> {
-            if (activePlayer != null){
-                activePlayer.stop();
-            }
-            if (menuPlayer != null) {
-                menuPlayer.stop();
-            }
-            if (gamePlayer != null) {
-                gamePlayer.stop();
-            }
+        if (activePlayer != null) {
+            activePlayer.stop();
             activePlayer = null;
-        });
+        }
+        if (menuPlayer != null) {
+            menuPlayer.stop();
+        }
+        if (gamePlayer != null) {
+            gamePlayer.stop();
+        }
     }
 
+    /**
+     * Internal helper to switch the active background track.
+     * Stops the current active player (if any) and starts the next one in loop mode.
+     */
     private void changeState(MediaPlayer next) {
+        if (next == null) {
+            return;
+        }
         if (activePlayer == next) {
+            // Already playing this track; avoid restarting/overlapping
             return;
         }
         if (activePlayer != null) {
             activePlayer.stop();
         }
         activePlayer = next;
+        activePlayer.setCycleCount(MediaPlayer.INDEFINITE);
         activePlayer.play();
     }
 }

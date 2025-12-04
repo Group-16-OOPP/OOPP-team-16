@@ -9,6 +9,8 @@ public class Constants {
         public static final int DOWN = 3;
     }
 
+
+
     public static class PlayerConstants {
         public static final int IDLE_RIGHT = 0;
         public static final int IDLE_LEFT = 2;

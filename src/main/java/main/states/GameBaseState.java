@@ -3,7 +3,7 @@ import java.awt.Graphics;
 import main.Game;
 
 /**
- * Base abstractclass for all high-level game states:
+ * Base abstract class for all high-level game states:
  * (menu, playing, leaderboard, level select).
  * https://refactoring.guru/design-patterns/state
  * IMPORTANT! We have to create a new State implementing the GameBaseState for rendering
