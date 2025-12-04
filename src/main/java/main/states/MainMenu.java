@@ -12,7 +12,7 @@ import main.Game;
 public class MainMenu {
     private Game game;
     private ArrayList<String> options = new ArrayList<>();
-    private ArrayList<Rectangle> bounds  = new ArrayList<>();
+    private ArrayList<Rectangle> bounds = new ArrayList<>();
     private int selected = -1;
     private Font titleFont = new Font("Arial", Font.BOLD, 48);
     private Font optionsFont = new Font("Arial", Font.PLAIN, 24);
@@ -23,11 +23,11 @@ public class MainMenu {
     public MainMenu(Game game) {
         this.game = game;
 
-        options.add("Play");
-        options.add("Change Player Name");
-        options.add("Select Level");
-        options.add("Leaderboard");
-        options.add("Quit");
+        options.add("Play");               // index 0
+        options.add("Change Player Name"); // index 1
+        options.add("Select Level");       // index 2
+        options.add("Leaderboard");        // index 3
+        options.add("Quit");               // index 4
 
         int buttonWidth = 300;
         int buttonHeight = 50;
@@ -123,14 +123,19 @@ public class MainMenu {
         case 0:
             game.setGameState(Game.GameState.PLAYING);
             break;
-        case 1:
+        case 1: // Change Name
+            startEditingName();
+            break;
+        case 2: // Select Level
             game.setGameState(Game.GameState.LEVEL_SELECT);
             break;
-        case 2:
+        case 3: // Leaderboard
             game.setGameState(Game.GameState.LEADERBOARD);
             break;
-        case 3:
+        case 4: // Quit
             System.exit(0);
+            break;
+        default:
             break;
         }
     }
