@@ -1,4 +1,4 @@
-package main;
+package main.view;
 
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
@@ -8,7 +8,7 @@ import javax.swing.JFrame;
 public class GameWindow {
     private JFrame jframe;
 
-    public GameWindow(GamePanel gamePanel){
+    public GameWindow(GamePanel gamePanel) {
         jframe = new JFrame();
 
         jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

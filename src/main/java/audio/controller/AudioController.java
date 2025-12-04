@@ -8,33 +8,41 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
 public class AudioController {
+    //has to be static to be called on by keyboardinputs later.
+    //add more down here if needed (sound effects).
+    private static AudioClip deadSound;
+    private static AudioClip jumpSound;
+    private static AudioClip nextLevelSound;
+    private static AudioClip platformSound;
+    private static AudioClip spawnSound;
+    private static boolean javaFXStarted = false;
+
     private MediaPlayer menuPlayer;
     private MediaPlayer gamePlayer;
-    //private MediaPlayer LeaderboardPlayer;
+    private MediaPlayer LeaderboardPlayer;
 
     private MediaPlayer activePlayer;
 
     //has to be static to be called on by keyboardinputs later.
     //add more down here if needed (sound effects).
-    private static AudioClip jumpSound;
-    private static AudioClip deadSound;
-    private static AudioClip spawnSound;
-    private static AudioClip nextLevelSound;
-    private static AudioClip platformSound;
-
-    private static boolean javaFXStarted = false;
-
-
     //To use this and add sounds, load the resources via the loadResouces method,
     //if it's a music state use use loadMedia() method, if it's a sound effect,
     //use the loadSoundClip() method.
+
     public AudioController() {
         startJavaFX();
         loadResources();
     }
 
+    //public static AudioController getInstance() {
+    //    return this.AudioController;
+    //}
+
     private void startJavaFX() {
-        if (javaFXStarted) return;
+        if (javaFXStarted) {
+            return;
+        }
+
         try {
             Platform.startup(() -> {
             });
@@ -98,15 +106,23 @@ public class AudioController {
 
     public void stopAll() {
         Platform.runLater(() -> {
-            if (activePlayer != null) activePlayer.stop();
-            if (menuPlayer != null) menuPlayer.stop();
-            if (gamePlayer != null) gamePlayer.stop();
+            if (activePlayer != null){
+                activePlayer.stop();
+            }
+            if (menuPlayer != null) {
+                menuPlayer.stop();
+            }
+            if (gamePlayer != null) {
+                gamePlayer.stop();
+            }
             activePlayer = null;
         });
     }
 
     private void changeState(MediaPlayer next) {
-        if (activePlayer == next) return;
+        if (activePlayer == next) {
+            return;
+        }
         if (activePlayer != null) {
             activePlayer.stop();
         }

@@ -8,39 +8,49 @@ import java.util.List;
 import audio.controller.AudioController;
 
 public class TriggerPlatform extends Entity {
-    
-    private float startX, startY;
-    private float targetX, targetY;
-    private float offsetX, offsetY; // Movement offset
+
+    private float startX;
+    private float startY;
+    private float targetX;
+    private float targetY;
+    private float offsetX;
+    private float offsetY; // Movement offset
     private float speed;
     private boolean triggered = false;
     private boolean reachedTarget = false;
     private BufferedImage sprite;
     private boolean shouldReturn;
     private boolean movingToTarget = true; // true = moving to target, false = returning to start
-    private int spriteWidth, spriteHeight; // Original sprite size
-    private float spriteOffsetX, spriteOffsetY; // Offset to center sprite in hitbox
+    private int spriteWidth;
+    private float spriteHeight; // Original sprite size
+    private float spriteOffsetX;
+    private float spriteOffsetY; // Offset to center sprite in hitbox
     private boolean solid = false; // If true, player can stand on this platform
-    
+
     // For waiting at target before returning
     private boolean waitingAtTarget = false;
     private long waitStartTime;
     private long waitDurationMs = 1000; // 1 second wait
-    
+
     // For multi-tile platforms
     private List<float[]> tilePositions = new ArrayList<>(); // Relative positions of tiles
     private List<BufferedImage> tileSprites = new ArrayList<>();
-    private float firstTileOffsetX = 0, firstTileOffsetY = 0; // Offset of first tile within bounding box
-    
+    private float firstTileOffsetX = 0;
+    private float firstTileOffsetY = 0; // Offset of first tile within bounding box
+
     // Original sprite bounds (for collision when hitbox is enlarged)
-    private float originalX, originalY;
-    private int originalWidth, originalHeight;
-    
+    private float originalX;
+    private float originalY;
+    private int originalWidth;
+    private float originalHeight;
+
     // Audio controller for playing sounds
     private AudioController audioController;
-    
-    public TriggerPlatform(float x, float y, float targetX, float targetY, 
-                           int width, int height, float speed, BufferedImage sprite, boolean shouldReturn) {
+
+    public TriggerPlatform(float x, float y, float targetX, float targetY,
+                           int width, int height, float speed, BufferedImage sprite,
+                           boolean shouldReturn) {
+
         super(x, y, width, height);
         this.startX = x;
         this.startY = y;
@@ -60,24 +70,24 @@ public class TriggerPlatform extends Entity {
         initHitbox(x, y, width, height);
         // Don't enlarge hitbox here - let Level do it for grouped platforms
     }
-    
+
     // Set the offset of the first tile sprite within the bounding box
     public void setFirstTileOffset(float offsetX, float offsetY) {
         this.firstTileOffsetX = offsetX;
         this.firstTileOffsetY = offsetY;
     }
-    
+
     // Add a tile to this platform (position relative to bounding box top-left)
     public void addTile(float relX, float relY, BufferedImage tileSprite) {
         tilePositions.add(new float[]{relX, relY});
         tileSprites.add(tileSprite);
     }
-    
+
     public void update() {
         if (!triggered || reachedTarget) {
             return;
         }
-        
+
         // If waiting at target, check if wait is over
         if (waitingAtTarget) {
             if (System.currentTimeMillis() - waitStartTime >= waitDurationMs) {
@@ -86,20 +96,20 @@ public class TriggerPlatform extends Entity {
             }
             return;
         }
-        
+
         // Determine current destination
         float destX = movingToTarget ? targetX : startX;
         float destY = movingToTarget ? targetY : startY;
-        
+
         float dirX = destX - hitbox.x;
         float dirY = destY - hitbox.y;
         float distance = (float) Math.sqrt(dirX * dirX + dirY * dirY);
-        
+
         if (distance < speed) {
             // Reached destination
             hitbox.x = destX;
             hitbox.y = destY;
-            
+
             if (movingToTarget && shouldReturn) {
                 // Start waiting at target
                 waitingAtTarget = true;
@@ -114,25 +124,25 @@ public class TriggerPlatform extends Entity {
             hitbox.y += (dirY / distance) * speed;
         }
     }
-    
+
     public void render(Graphics g) {
         int tileSize = main.Game.TILES_SIZE;
-        
+
         // Sprite area is centered in the hitbox (hitbox is 1.5x the sprite area)
         float spriteAreaX = hitbox.x + hitbox.width / 6;
         float spriteAreaY = hitbox.y + hitbox.height / 6;
-        
+
         // Draw first tile sprite at its offset within the sprite area
         int firstX = (int) (spriteAreaX + firstTileOffsetX);
         int firstY = (int) (spriteAreaY + firstTileOffsetY);
-        
+
         if (sprite != null) {
             g.drawImage(sprite, firstX, firstY, tileSize, tileSize, null);
         } else {
             g.setColor(java.awt.Color.ORANGE);
             g.fillRect(firstX, firstY, tileSize, tileSize);
         }
-        
+
         // Draw additional tiles relative to sprite area top-left
         for (int i = 0; i < tilePositions.size(); i++) {
             float[] pos = tilePositions.get(i);
@@ -147,12 +157,12 @@ public class TriggerPlatform extends Entity {
         //g.setColor(java.awt.Color.RED);
         //g.drawRect((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height);
     }
-    
+
     // Check if player is touching this platform
     public boolean checkPlayerCollision(Entity player) {
         return hitbox.intersects(player.getHitbox());
     }
-    
+
     public void trigger() {
         if (!triggered) { // Only play sound on first trigger
             triggered = true;
@@ -161,15 +171,15 @@ public class TriggerPlatform extends Entity {
             }
         }
     }
-    
+
     public boolean isTriggered() {
         return triggered;
     }
-    
+
     public boolean hasReachedTarget() {
         return reachedTarget;
     }
-    
+
     public void reset() {
         hitbox.x = startX;
         hitbox.y = startY;
@@ -178,16 +188,16 @@ public class TriggerPlatform extends Entity {
         movingToTarget = true;
         waitingAtTarget = false;
     }
-    
+
     public void setSprite(BufferedImage sprite) {
         this.sprite = sprite;
     }
-    
+
     public void setHitboxSize(int hitboxWidth, int hitboxHeight, int newX, int newY) {
         // Calculate offset from old position
         float offsetX = newX - hitbox.x;
         float offsetY = newY - hitbox.y;
-        
+
         hitbox.width = hitboxWidth;
         hitbox.height = hitboxHeight;
         hitbox.x = newX;
@@ -198,19 +208,19 @@ public class TriggerPlatform extends Entity {
         this.targetX += offsetX;
         this.targetY += offsetY;
     }
-    
+
     public void setSolid(boolean solid) {
         this.solid = solid;
     }
-    
+
     public boolean isSolid() {
         return solid;
     }
-    
+
     public void setAudioController(AudioController audioController) {
         this.audioController = audioController;
     }
-    
+
     // Get the sprite hitbox (the actual collidable area for standing)
     public java.awt.geom.Rectangle2D.Float getSpriteHitbox() {
         // Sprite area is centered in hitbox (hitbox is 1.5x sprite area)
@@ -219,7 +229,8 @@ public class TriggerPlatform extends Entity {
         float spriteAreaH = hitbox.height * 2 / 3;
         float spriteAreaX = hitbox.x + hitbox.width / 6;
         float spriteAreaY = hitbox.y + hitbox.height / 6;
-        return new java.awt.geom.Rectangle2D.Float(spriteAreaX, spriteAreaY, spriteAreaW, spriteAreaH);
+        return new java.awt.geom.Rectangle2D.Float(
+                spriteAreaX, spriteAreaY, spriteAreaW, spriteAreaH);
     }
 }
 

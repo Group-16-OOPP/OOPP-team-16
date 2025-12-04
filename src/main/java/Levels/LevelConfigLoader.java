@@ -10,7 +10,7 @@ import java.util.List;
 import entities.SpawnPlatform;
 
 public class LevelConfigLoader {
-    
+
     public static class LevelConfig {
         public float spawnX;
         public float spawnY;
@@ -19,47 +19,59 @@ public class LevelConfigLoader {
         public List<SpikeConfig> spikes = new ArrayList<>();
         public List<TriggerSpikeConfig> triggerSpikes = new ArrayList<>();
     }
-    
+
     public static class SpawnPlatformConfig {
-        public float x, y, width, height, speed;
+        public float x;
+        public float y;
+        public float width;
+        public float height;
+        public float speed;
         public float waitTime;
     }
-    
+
     public static class GroupedTriggerPlatformConfig {
         public int tileId;
-        public float targetOffsetX, targetOffsetY, speed;
-        public boolean shouldReturn, solid;
-    }
-    
-    public static class SpikeConfig {
-        public int tileId, spriteId;
-    }
-    
-    public static class TriggerSpikeConfig {
-        public int tileId, spriteId;
-        public float targetOffsetX, targetOffsetY, speed, triggerDistance;
+        public float targetOffsetX;
+        public float targetOffsetY;
+        public float speed;
+        public boolean solid;
         public boolean shouldReturn;
     }
-    
+
+    public static class SpikeConfig {
+        public int tileId;
+        public int spriteId;
+    }
+
+    public static class TriggerSpikeConfig {
+        public int tileId;
+        public int spriteId;
+        public float targetOffsetX;
+        public float targetOffsetY;
+        public float speed;
+        public float triggerDistance;
+        public boolean shouldReturn;
+    }
+
     public static LevelConfig loadConfig(String configFileName) {
         LevelConfig config = new LevelConfig();
-        
+
         try {
             InputStream is = LevelConfigLoader.class.getResourceAsStream("/" + configFileName);
             if (is == null) {
                 System.err.println("Could not find config file: " + configFileName);
                 return config;
             }
-            
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line;
-            
+
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue; // Skip empty lines and comments
                 }
-                
+
                 if (line.startsWith("spawnX=")) {
                     config.spawnX = Float.parseFloat(line.substring(7));
                 } else if (line.startsWith("spawnY=")) {
@@ -103,40 +115,40 @@ public class LevelConfigLoader {
                     config.triggerSpikes.add(tsc);
                 }
             }
-            
+
             reader.close();
         } catch (Exception e) {
             System.err.println("Error loading config file " + configFileName + ": " + e.getMessage());
             e.printStackTrace();
         }
-        
+
         return config;
     }
-    
-    public static void applyConfig(Level level, LevelConfig config, BufferedImage[] levelSprite, 
+
+    public static void applyConfig(Level level, LevelConfig config, BufferedImage[] levelSprite,
                                    BufferedImage[] objectSprite, BufferedImage spawnTube) {
         // Apply spawn platforms (use the last one if multiple)
         if (!config.spawnPlatforms.isEmpty()) {
             SpawnPlatformConfig sp = config.spawnPlatforms.get(config.spawnPlatforms.size() - 1);
-            level.setSpawnPlatform(new SpawnPlatform(sp.x, sp.y, (int)sp.width, (int)sp.height, 
-                                                     (int)sp.speed, sp.waitTime, spawnTube));
+            level.setSpawnPlatform(new SpawnPlatform(sp.x, sp.y, (int) sp.width, (int) sp.height,
+                    (int) sp.speed, sp.waitTime, spawnTube));
         }
-        
+
         // Apply grouped trigger platforms
         for (GroupedTriggerPlatformConfig gtp : config.groupedTriggerPlatforms) {
             level.createGroupedTriggerPlatformFromTile(gtp.tileId, gtp.targetOffsetX, gtp.targetOffsetY,
-                                                       gtp.speed, levelSprite, gtp.shouldReturn, gtp.solid);
+                    gtp.speed, levelSprite, gtp.shouldReturn, gtp.solid);
         }
-        
+
         // Apply spikes
         for (SpikeConfig sc : config.spikes) {
             level.createSpikesFromTile(sc.tileId, sc.spriteId, objectSprite);
         }
-        
+
         // Apply trigger spikes
         for (TriggerSpikeConfig tsc : config.triggerSpikes) {
             level.createTriggerSpikesFromTile(tsc.tileId, tsc.spriteId, tsc.targetOffsetX, tsc.targetOffsetY,
-                                              tsc.speed, tsc.triggerDistance, objectSprite, tsc.shouldReturn);
+                    tsc.speed, tsc.triggerDistance, objectSprite, tsc.shouldReturn);
         }
     }
 }

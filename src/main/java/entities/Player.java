@@ -4,28 +4,36 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import main.Game;
-import static utilz.Constants.PlayerConstants.GetSpriteAmount;
+
+import static utilz.Constants.PlayerConstants.getSpriteAmount;
 import static utilz.Constants.PlayerConstants.IDLE_LEFT;
 import static utilz.Constants.PlayerConstants.IDLE_RIGHT;
 import static utilz.Constants.PlayerConstants.JUMPING_LEFT;
 import static utilz.Constants.PlayerConstants.JUMPING_RIGHT;
 import static utilz.Constants.PlayerConstants.RUNNING_LEFT;
 import static utilz.Constants.PlayerConstants.RUNNING_RIGHT;
-import static utilz.HelpMethods.CanMoveHere;
-import static utilz.HelpMethods.GetEntityXPosNextToWall;
-import static utilz.HelpMethods.GetEntityYPosUnderOrAbove;
-import static utilz.HelpMethods.IsEntityDead;
-import static utilz.HelpMethods.IsEntityOnFloor;
-import static utilz.HelpMethods.IsOnLevelEnd;
+import static utilz.HelpMethods.canMoveHere;
+import static utilz.HelpMethods.getEntityXPosNextToWall;
+import static utilz.HelpMethods.getEntityYPosUnderOrAbove;
+import static utilz.HelpMethods.isEntityDead;
+import static utilz.HelpMethods.isEntityOnFloor;
+import static utilz.HelpMethods.isOnLevelEnd;
+
 import utilz.LoadSave;
 
-public class Player extends Entity{
+public class Player extends Entity {
+    private static final long RESPAWN_DELAY_MS = 500;
 
     private BufferedImage[][] animation;
-    private int aniTick, aniIndex, aniSpeed = 15;
+    private int aniTick;
+    private int aniIndex;
+    private int aniSpeed = 15;
     private int playerAction = IDLE_RIGHT;
-    private boolean left,right,facingRight;
-    private boolean moving = false, jump = false;
+    private boolean left;
+    private boolean right;
+    private boolean facingRight;
+    private boolean moving = false;
+    private boolean jump = false;
     private float playerSpeed = 1.0f;
 
     //Jumping / gravity mechanic
@@ -38,23 +46,19 @@ public class Player extends Entity{
     private int[][] lvlData;
     private float xDrawOffset = 9.5f * Game.SCALE;
     private float yDrawOffset = 8.25f * Game.SCALE;
-    private float spawnX, spawnY;
+    private float spawnX;
+    private float spawnY;
     private boolean isDead = false;
     private long deathTime = 0;
-    private static final long RESPAWN_DELAY_MS = 500;
     private boolean reachedLevelEnd = false;
     private int currDeathCount = 0;
     private Levels.Level currentLevel;
     private Game game; // reference to notify game about deaths
 
-    
-    
-    
-
     public Player(float x, float y, int width, int height) {
         super(x, y, width, height);
         loadAnimatons();
-        initHitbox(x, y , 12*Game.SCALE, 22*Game.SCALE);
+        initHitbox(x, y, 12 * Game.SCALE, 22 * Game.SCALE);
         spawnX = x;
         spawnY = y;
     }
@@ -63,38 +67,35 @@ public class Player extends Entity{
         this.game = game;
     }
 
-    public void update(){
+    public void update() {
         if (isDead) {
             if (System.currentTimeMillis() - deathTime >= RESPAWN_DELAY_MS) {
                 respawn();
             }
             return;
         }
-        if (IsEntityDead(hitbox, lvlData) || 
-            (currentLevel != null && currentLevel.checkSpikeCollision(this)) ||
-            (currentLevel != null && currentLevel.checkTriggerSpikeCollision(this))) {
+        if (isEntityDead(hitbox, lvlData) ||
+                (currentLevel != null && currentLevel.checkSpikeCollision(this)) ||
+                (currentLevel != null && currentLevel.checkTriggerSpikeCollision(this))) {
             die();
             return;
         }
-        if (IsOnLevelEnd(hitbox, lvlData)) {
+        if (isOnLevelEnd(hitbox, lvlData)) {
             reachedLevelEnd = true;
-            if (game != null) {
-                game.onLevelCompleted();
-            }
         }
         updatePos();
         updateAnimationTick();
         setAnimation();
     }
-    
+
     public boolean hasReachedLevelEnd() {
         return reachedLevelEnd;
     }
-    
+
     public void resetLevelEnd() {
         reachedLevelEnd = false;
     }
-    
+
     private void die() {
         currDeathCount += 1;
         if (game != null) {
@@ -102,19 +103,19 @@ public class Player extends Entity{
         }
         isDead = true;
         deathTime = System.currentTimeMillis();
-        
+
         // Record death position before moving player off screen
         if (currentLevel != null) {
-            BufferedImage deathSprite = LoadSave.GetSpriteAtlas(LoadSave.PLAYER_DEAD);
+            BufferedImage deathSprite = LoadSave.getSpriteAtlas(LoadSave.PLAYER_DEAD);
             currentLevel.recordDeathPosition(hitbox.x - xDrawOffset, hitbox.y - yDrawOffset, deathSprite);
         }
-        
+
         hitbox.x = 2000;
         hitbox.y = 2000;
         resetInAir();
         resetDirBooleans();
     }
-    
+
     private void respawn() {
         isDead = false;
         hitbox.x = spawnX;
@@ -125,10 +126,13 @@ public class Player extends Entity{
         moving = false;
         jump = false;
 
-        inAir = !IsEntityOnFloor(hitbox, lvlData);
+        inAir = !isEntityOnFloor(hitbox, lvlData);
     }
-    public void render(Graphics g){
-        g.drawImage(animation[playerAction][aniIndex], (int)(hitbox.x - xDrawOffset), (int)(hitbox.y - yDrawOffset),width,height, null);
+
+    public void render(Graphics g) {
+        g.drawImage(animation[playerAction][aniIndex],
+                (int) (hitbox.x - xDrawOffset),
+                (int) (hitbox.y - yDrawOffset), width, height, null);
         //drawHitbox(g);
     }
 
@@ -140,14 +144,14 @@ public class Player extends Entity{
             if (left) {
                 playerAction = RUNNING_LEFT;
                 facingRight = false;
-            }else if(right){
+            } else if (right) {
                 facingRight = true;
                 playerAction = RUNNING_RIGHT;
             }
-        }else{
+        } else {
             if (!facingRight) {
                 playerAction = IDLE_LEFT;
-            }else{
+            } else {
                 playerAction = IDLE_RIGHT;
             }
         }
@@ -155,7 +159,7 @@ public class Player extends Entity{
         if (jump) {
             if (!facingRight) {
                 playerAction = JUMPING_LEFT;
-            }else{
+            } else {
                 playerAction = JUMPING_RIGHT;
             }
         }
@@ -171,11 +175,11 @@ public class Player extends Entity{
     }
 
     private void updateAnimationTick() {
-        aniTick ++;
+        aniTick++;
         if (aniTick >= aniSpeed) {
             aniTick = 0;
-            aniIndex ++;
-            if (aniIndex >= GetSpriteAmount(playerAction)) {
+            aniIndex++;
+            if (aniIndex >= getSpriteAmount(playerAction)) {
                 aniIndex = 0;
             }
         }
@@ -186,28 +190,34 @@ public class Player extends Entity{
         if (jump) {
             jump();
         }
-        if (!left && !right && !inAir)
+
+        if (!left && !right && !inAir) {
             return;
+        }
         float xSpeed = 0;
 
-
-        if (left)
+        if (left) {
             xSpeed -= playerSpeed;
+        }
 
-        if(right)
+        if (right) {
             xSpeed += playerSpeed;
+        }
 
         if (!inAir) {
-            if (!IsEntityOnFloor(hitbox,lvlData) && (currentLevel == null || !currentLevel.isOnSolidPlatform(hitbox)))
+            if (!isEntityOnFloor(hitbox, lvlData) && (currentLevel == null ||
+                    !currentLevel.isOnSolidPlatform(hitbox))) {
                 inAir = true;
+            }
         }
 
         if (inAir) {
-            if (CanMoveHere(hitbox.x, hitbox.y + airSpeed, hitbox.width, hitbox.height, lvlData)) {
+            if (canMoveHere(hitbox.x, hitbox.y + airSpeed, hitbox.width,
+                    hitbox.height, lvlData)) {
                 hitbox.y += airSpeed;
                 airSpeed += gravity;
                 updateXPos(xSpeed);
-                
+
                 // Check if landed on solid platform
                 if (currentLevel != null && airSpeed > 0) {
                     float platformY = currentLevel.getSolidPlatformY(hitbox, airSpeed);
@@ -216,24 +226,25 @@ public class Player extends Entity{
                         resetInAir();
                     }
                 }
-            }else{
-                hitbox.y = GetEntityYPosUnderOrAbove(hitbox,airSpeed);
+            } else {
+                hitbox.y = getEntityYPosUnderOrAbove(hitbox, airSpeed);
                 if (airSpeed > 0) {
                     resetInAir();
-                }else{
+                } else {
                     airSpeed = fallSpeedAfterCollision;
                 }
                 updateXPos(xSpeed);
             }
-        }else{
+        } else {
             updateXPos(xSpeed);
         }
         moving = true;
     }
 
     private void jump() {
-        if (inAir)
+        if (inAir) {
             return;
+        }
         inAir = true;
         airSpeed = jumpSpeed;
     }
@@ -244,38 +255,40 @@ public class Player extends Entity{
     }
 
     private void updateXPos(float xSpeed) {
-        if(CanMoveHere(hitbox.x + xSpeed, hitbox.y, hitbox.width, hitbox.height, lvlData)){
+        if (canMoveHere(hitbox.x + xSpeed, hitbox.y, hitbox.width,
+                hitbox.height, lvlData)) {
             hitbox.x += xSpeed;
-        }else{
-            hitbox.x = GetEntityXPosNextToWall(hitbox,xSpeed);
+        } else {
+            hitbox.x = getEntityXPosNextToWall(hitbox, xSpeed);
         }
     }
 
     private void loadAnimatons() {
 
-        BufferedImage img = LoadSave.GetSpriteAtlas(LoadSave.PLAYER_ATLAS);
+        BufferedImage img = LoadSave.getSpriteAtlas(LoadSave.PLAYER_ATLAS);
         //Storleken på spritesheet
         animation = new BufferedImage[4][8];
         for (int j = 0; j < animation.length; j++) {
             for (int i = 0; i < animation[j].length; i++) {
                 //sprite size
-                animation[j][i] = img.getSubimage(i*32, j*32, 32, 32);
+                animation[j][i] = img.getSubimage(i * 32, j * 32, 32, 32);
             }
         }
 
     }
 
-    public void loadLvlData(int[][] lvlData){
+    public void loadLvlData(int[][] lvlData) {
         this.lvlData = lvlData;
-        if (!IsEntityOnFloor(hitbox, lvlData))
+        if (!isEntityOnFloor(hitbox, lvlData)) {
             inAir = true;
+        }
     }
-    
+
     public void setSpawnPoint(float x, float y) {
         this.spawnX = x;
         this.spawnY = y;
     }
-    
+
     public void spawnAtLevelStart() {
         hitbox.x = spawnX;
         hitbox.y = spawnY;
@@ -285,13 +298,13 @@ public class Player extends Entity{
         jump = false;
         isDead = false;
         reachedLevelEnd = false;
-        inAir = !IsEntityOnFloor(hitbox, lvlData);
+        inAir = !isEntityOnFloor(hitbox, lvlData);
     }
-    
+
     public int getDeathCount() {
         return currDeathCount;
     }
-    
+
     public void resetDeathCount() {
         currDeathCount = 0;
     }
@@ -320,7 +333,7 @@ public class Player extends Entity{
     public void setJump(boolean jump) {
         this.jump = jump;
     }
-    
+
     public void setCurrentLevel(Levels.Level level) {
         this.currentLevel = level;
     }

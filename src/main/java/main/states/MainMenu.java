@@ -14,8 +14,8 @@ public class MainMenu {
     private ArrayList<String> options = new ArrayList<>();
     private ArrayList<Rectangle> bounds = new ArrayList<>();
     private int selected = -1;
-    private Font titleFont = new Font("Arial", Font.BOLD, 48);
-    private Font optionsFont = new Font("Arial", Font.PLAIN, 24);
+    private Font titleFont = new Font("Algerian", Font.BOLD, 48);
+    private Font optionsFont = new Font("Calibri", Font.PLAIN, 24);
 
     private boolean editingName = false;
     private StringBuilder nameBuffer = new StringBuilder();
@@ -23,11 +23,11 @@ public class MainMenu {
     public MainMenu(Game game) {
         this.game = game;
 
-        options.add("Play");               // index 0
-        options.add("Change Player Name"); // index 1
-        options.add("Select Level");       // index 2
-        options.add("Leaderboard");        // index 3
-        options.add("Quit");               // index 4
+        options.add("PLAY"); // index 0
+        options.add("CHANGE PLAYER"); // index 1
+        options.add("SELECT LEVEL"); // index 2
+        options.add("LEADERBOARDS"); // index 3
+        options.add("QUIT"); // index 4
 
         int buttonWidth = 300;
         int buttonHeight = 50;
@@ -50,7 +50,7 @@ public class MainMenu {
         // title
         g.setFont(titleFont);
         g.setColor(Color.WHITE);
-        String title = "To the TOP!";
+        String title = "RUST RUNNER";
         FontMetrics fontmetrics = g.getFontMetrics();
         int textNumber = (Game.GAME_WIDTH - fontmetrics.stringWidth(title)) / 2;
         g.drawString(title, textNumber, 150);
@@ -151,7 +151,9 @@ public class MainMenu {
     }
 
     public void handleNameKeyPressed(int keyCode, char keyChar) {
-        if (!editingName) return;
+        if (!editingName) {
+            return;
+        }
 
         if (keyCode == java.awt.event.KeyEvent.VK_ENTER) {
             if (!nameBuffer.isEmpty()) {

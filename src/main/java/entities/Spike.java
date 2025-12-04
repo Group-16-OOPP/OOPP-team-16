@@ -6,7 +6,8 @@ import java.awt.image.BufferedImage;
 public class Spike extends Entity {
     
     private BufferedImage sprite;
-    private int spriteWidth, spriteHeight;
+    private int spriteWidth;
+    private int spriteHeight;
     
     public Spike(float x, float y, int width, int height, BufferedImage sprite) {
         super(x, y, width, height);

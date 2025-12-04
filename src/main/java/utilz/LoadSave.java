@@ -61,22 +61,22 @@ public class LoadSave {
     // leaderboard
     private static final String LEADERBOARD_FILE_NAME = "leaderboard.txt";
 
-    public static BufferedImage GetSpriteAtlas(String fileName) {
+    public static BufferedImage getSpriteAtlas(String fileName) {
         BufferedImage img = null;
-        InputStream is = LoadSave.class.getResourceAsStream("/" + fileName);
+        InputStream inputStream = LoadSave.class.getResourceAsStream("/" + fileName);
 
         try {
-            if (is == null) {
+            if (inputStream == null) {
                 System.err.println("Could not load image: /" + fileName);
                 return null;
             }
-            img = ImageIO.read(is);
+            img = ImageIO.read(inputStream);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (is != null) {
+            if (inputStream != null) {
                 try {
-                    is.close();
+                    inputStream.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -85,9 +85,9 @@ public class LoadSave {
         return img;
     }
 
-    public static int[][] GetLevelData(String levelFileName) {
+    public static int[][] getLevelData(String levelFileName) {
         int[][] lvlData = new int[Game.TILES_IN_HEIGHT][Game.TILES_IN_WIDTH];
-        BufferedImage img = GetSpriteAtlas(levelFileName);
+        BufferedImage img = getSpriteAtlas(levelFileName);
         if (img == null) {
             return lvlData;
         }
@@ -104,9 +104,9 @@ public class LoadSave {
         return lvlData;
     }
 
-    public static int[][] GetLevelObstacleData(String levelFileName) {
+    public static int[][] getLevelObstacleData(String levelFileName) {
         int[][] lvlData = new int[Game.TILES_IN_HEIGHT][Game.TILES_IN_WIDTH];
-        BufferedImage img = GetSpriteAtlas(levelFileName);
+        BufferedImage img = getSpriteAtlas(levelFileName);
         if (img == null) {
             return lvlData;
         }
@@ -123,9 +123,9 @@ public class LoadSave {
         return lvlData;
     }
 
-    public static int[][] GetLevelObjData(String levelFileName) {
+    public static int[][] getLevelObjData(String levelFileName) {
         int[][] lvlData = new int[Game.TILES_IN_HEIGHT][Game.TILES_IN_WIDTH];
-        BufferedImage img = GetSpriteAtlas(levelFileName);
+        BufferedImage img = getSpriteAtlas(levelFileName);
         if (img == null) {
             return lvlData;
         }

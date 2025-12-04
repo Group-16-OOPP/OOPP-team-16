@@ -13,6 +13,14 @@ import main.Game;
 import utilz.LoadSave;
 
 public class LevelSelect {
+    // Grid layout
+    private static final int COLUMNS = 3;
+    private static final int TOP_MARGIN = 120;
+    private static final int PREVIEW_WIDTH = 300;
+    private static final int PREVIEW_HEIGHT = 200;
+    private static final int PREVIEW_SPACING = 30;
+
+    //variables
     private Game game;
     private LevelManager levelManager;
     private ArrayList<Rectangle> levelBounds = new ArrayList<>();
@@ -21,14 +29,7 @@ public class LevelSelect {
     private int hovered = -1;
     private Font titleFont = new Font("Arial", Font.BOLD, 48);
     private Font levelFont = new Font("Arial", Font.BOLD, 24);
-    
-    // Grid layout
-    private static final int COLUMNS = 3;
-    private static final int PREVIEW_WIDTH = 300;
-    private static final int PREVIEW_HEIGHT = 200;
-    private static final int PREVIEW_SPACING = 30;
-    private static final int TOP_MARGIN = 120;
-    
+
     public LevelSelect(Game game, LevelManager levelManager) {
         this.game = game;
         this.levelManager = levelManager;
@@ -38,14 +39,14 @@ public class LevelSelect {
     
     private void loadLevelPreviews() {
         // Load preview images for each level
-        levelPreviews.add(LoadSave.GetSpriteAtlas(LoadSave.LEVEL_ONE_DATA));
-        levelPreviews.add(LoadSave.GetSpriteAtlas(LoadSave.LEVEL_TWO_DATA));
-        levelPreviews.add(LoadSave.GetSpriteAtlas(LoadSave.LEVEL_THREE_DATA));
-        levelPreviews.add(LoadSave.GetSpriteAtlas(LoadSave.LEVEL_FOUR_DATA));
-        levelPreviews.add(LoadSave.GetSpriteAtlas(LoadSave.LEVEL_FIVE_DATA));
+        levelPreviews.add(LoadSave.getSpriteAtlas(LoadSave.LEVEL_ONE_DATA));
+        levelPreviews.add(LoadSave.getSpriteAtlas(LoadSave.LEVEL_TWO_DATA));
+        levelPreviews.add(LoadSave.getSpriteAtlas(LoadSave.LEVEL_THREE_DATA));
+        levelPreviews.add(LoadSave.getSpriteAtlas(LoadSave.LEVEL_FOUR_DATA));
+        levelPreviews.add(LoadSave.getSpriteAtlas(LoadSave.LEVEL_FIVE_DATA));
         
         // Load lock image
-        lockImage = LoadSave.GetSpriteAtlas(LoadSave.LOCK);
+        lockImage = LoadSave.getSpriteAtlas(LoadSave.LOCK);
     }
     
     private void calculateLevelBounds() {

@@ -1,20 +1,40 @@
 package main;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-
-import Levels.LevelManager;
 import audio.controller.AudioController;
 import entities.Player;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import Levels.LevelManager;
+import main.events.GameEventListener;
+import main.model.GameModel;
+import main.states.GameBaseState;
 import main.states.Leaderboard;
+import main.states.LeaderboardState;
 import main.states.LevelSelect;
+import main.states.LevelSelectState;
 import main.states.MainMenu;
+import main.states.MenuState;
+import main.states.PlayingState;
+import main.view.GamePanel;
+import main.view.GameView;
+import main.view.GameWindow;
 import utilz.LoadSave;
 
 public class Game implements Runnable {
+
+    public static final int TILES_DEAFULT_SIZE = 32;
+    public static final float SCALE = 1.0f;
+    public static final int TILES_IN_WIDTH = 40;
+    public static final int TILES_IN_HEIGHT = 25;
+    public static final int TILES_SIZE = (int) (TILES_DEAFULT_SIZE * SCALE);
+    public static final int GAME_WIDTH = TILES_SIZE * TILES_IN_WIDTH;
+    public static final int GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
+
+    public MainMenu mainMenu;
+    public Leaderboard leaderboard;
+    public LevelSelect levelSelect;
 
     private GamePanel gamePanel;
     private GameWindow gameWindow;
@@ -26,42 +46,21 @@ public class Game implements Runnable {
     private LevelManager levelManager;
     private AudioController audioController; // audio
 
-    public final static int TILES_DEAFULT_SIZE = 32;
-    public final static float SCALE = 1.0f;
-    public final static int TILES_IN_WIDTH = 40;
-    public final static int TILES_IN_HEIGHT = 25;
-    public final static int TILES_SIZE = (int) (TILES_DEAFULT_SIZE * SCALE);
-    public final static int GAME_WIDTH = TILES_SIZE * TILES_IN_WIDTH;
-    public final static int GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
-
     public enum GameState {MENU, PLAYING, LEADERBOARD, LEVEL_SELECT}
 
     private GameState gameState = GameState.MENU;
 
-    public MainMenu mainMenu;
-    public Leaderboard leaderboard;
-    public LevelSelect levelSelect;
+    private GameBaseState currentState;
+    private PlayingState playingState;
+    private MenuState menuState;
+    private LeaderboardState leaderboardState;
+    private LevelSelectState levelSelectState;
 
-    // Level transition
     private BufferedImage transitionImage;
-    private boolean inTransition = false;
-    private float transitionScale = 2f;
-    private boolean scalingUp = true;
-    private boolean levelLoaded = false;
-    private final float TRANSITION_SPEED = 0.015f;
-    
-    // Track player death for platform reset
-    private boolean playerWasDead = false;
 
-    // Player name
-    private String playerName = "Player1";
-
-    // Run tracking
-    private long runStartTimeNanos;
-    private int totalDeathsForRun;
-
-    // Pause flag that when true, gameplay updates are frozen
-    private boolean paused = false;
+    private final List<GameEventListener> gameEventListeners = new ArrayList<>();
+    private GameModel model;
+    private GameView view;
 
     public Game() {
         audioController = new AudioController();
@@ -79,14 +78,24 @@ public class Game implements Runnable {
     private void initClasses() {
         levelManager = new LevelManager(this);
         player = new Player(200, 550, (int) (32 * SCALE), (int) (32 * SCALE));
-        player.setGame(this);
+        player.setGame(this); //Did not work without????
         loadPlayerForCurrentLevel();
 
-        transitionImage = LoadSave.GetSpriteAtlas(LoadSave.TRANSITION_IMG);
+        model = new GameModel(player, levelManager);
+        view = new GameView(model);
+
+        transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
 
         mainMenu = new MainMenu(this);
         levelSelect = new LevelSelect(this, levelManager);
         leaderboard = new Leaderboard(this);
+
+        playingState = new PlayingState(this);
+        menuState = new MenuState(this);
+        leaderboardState = new LeaderboardState(this);
+        levelSelectState = new LevelSelectState(this);
+
+        currentState = menuState;
     }
 
     private void loadPlayerForCurrentLevel() {
@@ -99,161 +108,45 @@ public class Game implements Runnable {
         currentLevel.clearDeathPositions();
     }
 
+    public void reloadPlayerForCurrentLevel() {
+        loadPlayerForCurrentLevel();
+    }
+
     private void update() {
-        if (inTransition) {
-            updateTransition();
+        if (model.isInTransition()) {
+            model.updateTransition();
             return;
         }
-
-        switch (gameState) {
-        case PLAYING:
-            if (paused) {
-                // When paused, skip updating player and level
-                return;
-            }
-            boolean playerCurrentlyDead = player.getHitbox().x > 1500;
-            if (!playerWasDead && playerCurrentlyDead) {
-                // Player just died
-                audioController.playDead();
-                levelManager.getCurrentLvl().triggerSpawnPlatform();
-            }
-            if (playerWasDead && !playerCurrentlyDead) {
-                // Player just respawned
-                audioController.playRespawn();
-                levelManager.getCurrentLvl().resetPlatforms();
-            }
-            playerWasDead = playerCurrentlyDead;
-
-            player.update();
-            levelManager.update();
-            if (player.hasReachedLevelEnd()) {
-                startLevelTransition();
-            }
-            break;
-        case MENU:
-            mainMenu.update();
-            break;
-        case LEVEL_SELECT:
-            levelSelect.update();
-            break;
-        case LEADERBOARD:
-            leaderboard.update();
-            break;
-        }
-    }
-
-    private void startLevelTransition() {
-        audioController.playNextLevel();
-        inTransition = true;
-        scalingUp = true;
-        levelLoaded = false;
-        transitionScale = 0f;
-        player.resetLevelEnd();
-    }
-
-    private void updateTransition() {
-        if (scalingUp) {
-            transitionScale += TRANSITION_SPEED;
-            if (transitionScale >= 2f) {
-                transitionScale = 2f;
-                if (!levelLoaded) {
-                    // Save score for current level before loading next
-                    levelManager.setLevelScore(player.getDeathCount());
-                    player.resetDeathCount();
-                    // Load the next level while screen is covered
-                    levelManager.loadNextLevel();
-                    loadPlayerForCurrentLevel();
-                    levelLoaded = true;
-                }
-                scalingUp = false;
-            }
-        } else {
-            transitionScale -= TRANSITION_SPEED;
-            if (transitionScale <= 0f) {
-                transitionScale = 0f;
-                inTransition = false;
-            }
-        }
+        currentState.update();
     }
 
     public void render(Graphics g) {
-        switch (gameState) {
-        case PLAYING:
-            levelManager.draw(g);
-            levelManager.drawObjectLayer(g); // Draw object layer on top of everything except player
-            player.render(g); // Player on top of object layer
-            levelManager.getCurrentLvl().drawSpawnPlatform(g); // Draw in front of player
-            drawHUD(g);
+        currentState.render(g);
 
-            // If paused, draw overlay on top of gameplay
-            if (paused) {
-                drawPauseOverlay(g);
-            }
-            break;
-        case MENU:
-            mainMenu.draw(g);
-            break;
-        case LEVEL_SELECT:
-            levelSelect.draw(g);
-            break;
-        case LEADERBOARD:
-            leaderboard.draw(g);
-            break;
+        view.renderTransition(g, transitionImage);
+    }
+
+    public void updateGameState() {
+        model.updatePlaying();
+
+        if (model.checkIsDead()) {
+            audioController.playDead();
+            levelManager.getCurrentLvl().triggerSpawnPlatform();
         }
+        if (model.checkIsRespawn()) {
+            audioController.playRespawn();
+            levelManager.getCurrentLvl().resetPlatforms();
+        }
+        if (model.checkIsEndOfLevel()) {
+            levelCompletedScoringUpdate();
+            audioController.playNextLevel();
 
-        // Draw transition overlay on top
-        if (inTransition && transitionImage != null) {
-            drawTransition(g);
+            player.resetLevelEnd();
         }
     }
 
-    private void drawTransition(Graphics g) {
-        // Scale from 0 to cover the entire screen
-        int scaledWidth = (int) (GAME_WIDTH * transitionScale * 1.5f);
-        int scaledHeight = (int) (GAME_HEIGHT * transitionScale * 1.5f);
-
-        // Center the image
-        int x = (GAME_WIDTH - scaledWidth) / 2;
-        int y = (GAME_HEIGHT - scaledHeight) / 2;
-
-        g.drawImage(transitionImage, (int) (player.getHitbox().x - (scaledWidth / 2)), (int) player.getHitbox().y - (scaledHeight / 2), scaledWidth, scaledHeight, null);
-    }
-
-    private void drawHUD(Graphics g) {
-        //Background
-        g.setColor(new Color(0, 0, 0, 150));
-        g.fillRoundRect(10, 10, 200, 60, 10, 10);
-
-        //Text fonting
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 16));
-        g.drawString("Level: " + (levelManager.getCurrentLevelIndex() + 1), 20, 35);
-        g.drawString("Deaths: " + player.getDeathCount(), 20, 55);
-    }
-
-    private void drawPauseOverlay(Graphics g) {
-        // Semi-transparent black overlay
-        g.setColor(new Color(0, 0, 0, 150));
-        g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-        //final centered "PAUSED" text
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 48));
-        String text = "PAUSED";
-        FontMetrics fm = g.getFontMetrics();
-        int textWidth = fm.stringWidth(text);
-        int x = (GAME_WIDTH - textWidth) / 2;
-        int y = (GAME_HEIGHT - fm.getHeight()) / 2 + fm.getAscent();
-        g.drawString(text, x, y);
-
-        //hint: "press to resume" text
-        g.setFont(new Font("Arial", Font.PLAIN, 18));
-        String hint = "Press P to resume game";
-        fm = g.getFontMetrics();
-        int hintWidth = fm.stringWidth(hint);
-        int hx = (GAME_WIDTH - hintWidth) / 2;
-        int hy = y + 40;
-        g.drawString(hint, hx, hy);
+    public void renderGame(Graphics g) {
+        view.renderGame(g);
     }
 
     private void startGameLoop() {
@@ -313,64 +206,95 @@ public class Game implements Runnable {
         return gameState;
     }
 
+    //AUDIO CONTROL METHODS
     public AudioController getAudioController() {
         return audioController;
     }
 
+    //PLAYER NAME METHODS
     public String getPlayerName() {
-        return playerName;
+        return model.getPlayerName();
     }
 
     public void setPlayerName(String playerName) {
-        if (playerName != null && !playerName.isBlank()) {
-            this.playerName = playerName.trim();
-        }
+        model.setPlayerName(playerName);
     }
 
+    //GAME STATING
     public void setGameState(GameState newState) {
         GameState oldState = this.gameState;
         this.gameState = newState;
 
-        // Going back to main menu will reset
+        model.setGameState(newState);
+
+        GameBaseState previousState = currentState;
+        // Going back to main menu will reset all!
         if (newState == GameState.MENU && oldState == GameState.PLAYING) {
-            //reset level index
             levelManager.resetToFirstLevel();
-            //reset run stats
-            totalDeathsForRun = 0;
-            runStartTimeNanos = 0L;
-            //reload player
+            model.resetRunStats();
             loadPlayerForCurrentLevel();
         }
 
-        // If we are starting to play from the menu, start a fresh run (timer & deaths)
-        // Speedfix to allow the game to reset if going back to mainmenu.
+
+
+        // If we are starting to play from the menu, start a fresh run (timer & deaths), for leaderboard
         if (newState == GameState.PLAYING && oldState == GameState.MENU) {
-            totalDeathsForRun = 0;
-            runStartTimeNanos = System.nanoTime();
+            model.startNewRunTimer();
         }
 
         switch (newState) {
-        case MENU -> audioController.playMenuMusic();
-        case LEVEL_SELECT -> audioController.playMenuMusic();
-        case PLAYING -> audioController.playGameMusic();
-        case LEADERBOARD -> audioController.stopAll();
+        case MENU -> {
+            audioController.playMenuMusic();
+            currentState = menuState;
+        }
+        case LEVEL_SELECT -> {
+            audioController.playMenuMusic();
+            currentState = levelSelectState;
+        }
+        case PLAYING -> {
+            audioController.playGameMusic();
+            currentState = playingState;
+        }
+        case LEADERBOARD -> {
+            audioController.stopAll();
+            currentState = leaderboardState;
+        }
+        default -> {
+            //?
+        }
+        }
+
+        if (previousState != null && previousState != currentState) {
+            previousState.onExit();
+        }
+        if (currentState != null && previousState != currentState) {
+            currentState.onEnter();
         }
     }
 
     public void onPlayerDeath() {
-        totalDeathsForRun++;
+        model.onPlayerDeath();
+        for (GameEventListener listener : gameEventListeners) {
+            listener.onPlayerDeath();
+        }
     }
 
-    public void onLevelCompleted() {
+    public void levelCompletedScoringUpdate() {
         long runEndTimeNanos = System.nanoTime();
-        double timeMs = (runEndTimeNanos - runStartTimeNanos) / 1000000.0;
+        double timeMilliSeconds = (runEndTimeNanos - model.getRunStartTimeNanos()) / 1000000.0;
         int levelIndex = levelManager.getCurrentLevelIndex();
-        LoadSave.appendToScoreFile(playerName, levelIndex, timeMs, totalDeathsForRun);
+        LoadSave.appendToScoreFile(model.getPlayerName(), levelIndex, timeMilliSeconds, model.getTotalDeathsForRun());
+
+        for (GameEventListener listener : gameEventListeners) {
+            listener.onLevelCompleted(levelIndex, model.getTotalDeathsForRun(), timeMilliSeconds);
+        }
     }
 
     public void togglePause() {
-        if (gameState == GameState.PLAYING && !inTransition) {
-            paused = !paused;
-        }
+        model.togglePause();
+    }
+
+    public LevelManager getLevelManager() {
+        return model.getLevelManager();
     }
 }
