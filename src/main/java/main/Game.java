@@ -128,9 +128,11 @@ public class Game implements Runnable, PlayerEventListener {
         view.renderTransition(g, transitionImage);
     }
 
+    //TODO ADD EVENTLISTENERS HERE!!!!
     public void updateGameState() {
         model.updatePlaying();
 
+        //TODO Abstract so that it listens for "PlayerDiedEvent"
         if (model.checkIsDead()) {
             audioController.playDead();
             levelManager.getCurrentLvl().triggerSpawnPlatform();
@@ -139,6 +141,8 @@ public class Game implements Runnable, PlayerEventListener {
             audioController.playRespawn();
             levelManager.getCurrentLvl().resetPlatforms();
         }
+
+        //TODO Abstract so that it listens for "LvlCompletedEvent"
         if (model.checkIsEndOfLevel()) {
             levelCompletedScoringUpdate();
             audioController.playNextLevel();
@@ -264,10 +268,7 @@ public class Game implements Runnable, PlayerEventListener {
 
     @Override
     public void onPlayerDeath() {
-        // reuse existing logic that was previously called from Player via Game reference
         model.onPlayerDeath();
-
-
 
         for (GameEventListener listener : gameEventListeners) {
             listener.onPlayerDeath();
