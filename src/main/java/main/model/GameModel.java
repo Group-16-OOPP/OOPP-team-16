@@ -88,6 +88,8 @@ public class GameModel {
         return totalDeathsForRun;
     }
 
+
+    //TODO are these duplicates or am I tripping?... 2 am here
     public void resetRunStats() {
         totalDeathsForRun = 0;
         runStartTimeNanos = 0L;
@@ -98,10 +100,13 @@ public class GameModel {
         runStartTimeNanos = System.nanoTime();
     }
 
+    //TODO add to event listener, fine line between what is model vs controller behaviour....
     public void onPlayerDeath() {
         totalDeathsForRun++;
     }
 
+
+    //TODO same here..
     public void startLevelTransition() {
         inTransition = true;
         scalingUp = true;

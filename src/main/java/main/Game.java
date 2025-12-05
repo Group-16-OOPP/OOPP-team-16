@@ -243,8 +243,6 @@ public class Game implements Runnable, PlayerEventListener {
             loadPlayerForCurrentLevel();
         }
 
-
-
         //TODO Move into playingState: onEnter
         //If we are starting to play from the menu, start a fresh run (timer & deaths), for leaderboard
         if (newState == GameState.PLAYING && oldState == GameState.MENU) {
