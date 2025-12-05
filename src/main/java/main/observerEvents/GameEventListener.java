@@ -1,4 +1,4 @@
-package main.events;
+package main.observerEvents;
 
 /**
  * Observer for high-level game events such as player death and level completion,

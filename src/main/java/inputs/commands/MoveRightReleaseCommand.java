@@ -15,4 +15,3 @@ public class MoveRightReleaseCommand implements Command {
         game.getPlayer().setRight(false);
     }
 }
-

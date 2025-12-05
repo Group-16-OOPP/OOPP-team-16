@@ -4,7 +4,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import main.Game;
-import main.events.PlayerEventListener;
+import main.observerEvents.PlayerEventListener;
 
 import static utilz.Constants.PlayerConstants.getSpriteAmount;
 import static utilz.Constants.PlayerConstants.IDLE_LEFT;
@@ -131,6 +131,7 @@ public class Player extends Entity {
         inAir = !isEntityOnFloor(hitbox, lvlData);
     }
 
+    //TODO move into view?
     public void render(Graphics g) {
         g.drawImage(animation[playerAction][aniIndex],
                 (int) (hitbox.x - xDrawOffset),
@@ -265,6 +266,7 @@ public class Player extends Entity {
         }
     }
 
+    //TODO move into view?
     private void loadAnimatons() {
 
         BufferedImage img = LoadSave.getSpriteAtlas(LoadSave.PLAYER_ATLAS);

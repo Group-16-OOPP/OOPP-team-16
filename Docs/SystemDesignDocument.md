@@ -1,0 +1,422 @@
+# RUST RUNNER [V.0.5]
+
+---
+# System Design Document (SDD)
+
+> This is an up-to-date snapshot of the current design of RUST RUNNER, as of the 5th December, 2025.
+> This document is a summarized understanding of
+> the architecture, classes, and how the system interact with itself done by us, ***Group 16***.
+
+---
+## Developers
+- `Rayan Ahmad`    : `RayanAhmad123`
+- `Philip Hasson`  : `ChangIkJoong`
+- `Nadir Morabeth` :  ` `
+- `Oscar Jöjk`     : ` `
+- `Janna`          : ` `
+
+---
+## 1. Architectural Overview
+
+The game is meant to be structured around **MVC architecture** with additional
+patterns. The **MVC** pattern in our architecture consiting of:
+- **Model**
+  - `GameModel` : The central **GAME** model for our project, implementing the model for our game.
+  - `Player`, `Level`, `LevelManager` are also part of it, with entity classes under `entities`
+  directory and the level design and management in the `Levels` directory.
+- **View**
+  - `GameView` : Renders only the game environment, HUD, pause overlay, and transition.
+  - `GamePanel`, `GameWindow` : The Swing UI components, and window setup for the game.
+  - Main Menu, leaderboard and level-selection are renderers under `main.states`, abstracted with the `GameBaseState` using
+    the **State pattern**.
+- **Controller**
+  - `Game` : The main **Controller** unit and game loop, controlling and composing together the
+  **Model** and **View**, along with the different states and observers in the game.
+  - `GameBaseState` : An abstract of the concrete states implemented including the `PlayingState`, `MenuState`,
+    `LeaderboardState`, `LevelSelectState`. These emulate the **State pattern**, also communicating directly
+  with other Objects such as the **Singleton Pattern** of `AudioController`, enriching the system
+  with audible haptic feedback and sound.
+  - `KeyboardInputs`, `MouseInputs` and `inputs.commands.*` use a **Command pattern**
+    for input handling.
+  - `events` : Directory includes several **Observer Pattern** Event Listeners, which
+  are meant to be implemented to act as interfaces between `Game` and different sub-classes.
+
+### 1.1 High-level component overview
+
+- `MainClass`
+  - creates `Game` (main controller)
+- `Game`
+  - owns `GameModel`, `GameView`, `LevelManager`, `Player`, `AudioController`
+  - owns view adapter: `GamePanel`, `GameWindow`
+  - manages the current `GameBaseState` implementation
+  - acts as the central **Controller** hub, will be listening to low-level model events
+    (via listeners on `Player`) and communicating with higher-level
+    game events (via `GameEventListener` and `LevelCompletedListener`).
+- `GameModel`
+  - references `Player`, `LevelManager`
+  - exposes getters for data through the view (`GameView`) and controller (`Game`)
+- `GameView`
+  - reads from `GameModel` and draws via `Graphics`
+- `LevelManager`
+  - owns the collection of different `Level` objects
+  - uses `LoadSave` and `LevelConfigLoader` to build levels from resources
+  - exposes `loadNextLevel()` and `resetToFirstLevel()` used by `GameModel` and `Game`.
+- `AudioController`
+  - singleton that loads and plays music and sound effects (via JavaFX `MediaPlayer`/`AudioClip`)
+- `inputs/KeyboardInputs` & `inputs/MouseInputs`
+  - map user events to `Command` objects that call into `Game`/`Player`
+
+---
+
+## 2. Core Class Diagram (Overview) //TODO INSERT UMLS
+
+Here are a few UML-style class diagrams for the core architecture. They are not complete
+and have been abstracted to easier understand the key responsibilities and relations in our application software.
+
+Relationships (summary):
+
+- `MainClass` -> `Game` (creates)
+- `Game` -> `GameModel`, `GameView`, `LevelManager`, `Player`, `AudioController`, `GamePanel`, `GameWindow`, concrete states
+
+- `GameModel` -> `Player`, `LevelManager`
+- `GameView` -> `GameModel`
+- `LevelManager` -> [`Level`]s
+- `KeyboardInputs` / `MouseInputs` -> `Command` -> `Game` | `Player` | UI (state)
+
+- Work-In-Progress **Observer Pattern**:
+- `Game` -> `GameEventListener` for high-level death/level-completion notifications to views/services
+- `Game` -> `LevelCompletedListener` (default listener in `Game` that updates the score file via `LoadSave.appendToScoreFile` and forwards to `GameEventListener`)
+- `Player` -> `PlayerEventListener` (implemented by `Game`) for death notifications
+
+---
+
+## 3. MVC Responsibilities
+Repeating a bit but a more in-depth of why we consider and what we consider for each of the 
+Model-View-Controller components. Adding a bit of examples as well.
+### 3.1 Model Component
+
+**Key classes:**
+
+- `GameModel`
+    - Stores and process most of our game states, the model of the MVC pattern.
+    - It handles and communicates with the other classes:
+        - Death and respawn detection (`checkIsDead()`, `checkIsRespawn()`).
+        - End of a level detection: (`checkIsEndOfLevel()` via `player.hasReachedLevelEnd()`).
+        - Level transitions: (`startLevelTransition()`, `updateTransition()`).
+        - Pause state and routing of updates.
+        - Run statistics used for other classes such as `playerName`, total deaths, total spent time.
+
+
+- `Player`
+    - The `Player` class is meant to encapsulate the movement, physics, collisions (via `HelpMethods`
+and current `Level`).
+    - Has information for example about `hitbox`, velocities, jump and air state.
+    - Uses `isOnLevelEnd(...)` and sets `reachedLevelEnd`. It itself does not
+      trigger scoring or transitions directly.
+    - Is meant to notify `Game` about deaths through a `PlayerEventListener` instead of
+      holding a direct reference to `Game`, everything with **Observer Pattern** at this stage
+is however work-in-progress.
+
+
+- `LevelManager`
+    - Builds all levels from images and text resources using `LoadSave` and
+      `LevelConfigLoader`.
+    - Maintains `currentLevelIndex` and the list of levels `List<Level>`.
+    - Uses `update()` that send the information to the current `Level` to update
+      platforms, spikes, spawn platform.
+    - Exposes `resetToFirstLevel()` used when returning to the main menu.
+
+
+- `Level`
+    - Stores all of the tile data arrays for ground, obstacles and objects.
+    - Manages triggers, moving platforms, spikes, and death sprites.
+
+Together these forms the representation of the game world and it's rules.
+
+### 3.2 View Component
+
+**Key classes:**
+
+- `GameView`
+    - Responsible for rendering the GUI based on `GameModel`, parsing it downwards to it's respective
+  subclasses:
+        - Background, tiles, objects (`LevelManager.draw().*`).
+        - Curently renders player via the `Player` class: `Player.render(g)`.
+        - HUD: current level index and player death count.
+        - Pause overlay when `model.isPaused()`.
+        - Transition effects using `model.getTransitionScale()`.
+
+
+- `GamePanel`
+    - Swing `JPanel`: sets the size, attaches some of the input listeners, and currently communicates the 
+      `paintComponent` to `game.render(g)`.
+
+
+- `GameWindow`
+    - Wraps the Swing `JFrame` creation and focuses on its handling.
+
+
+- Menu and leaderboard views (`MainMenu`, `Leaderboard`, `LevelSelect`) as different states using State
+pattern, switching between these views interchageably.
+    - Render their own UIs and rely on `Game` | `LevelManager` | `GameModel` for data.
+    - `Leaderboard` reads scores from `LoadSave.readScoreFile()` | `updateScoreFile()` and
+      renders per-level the top 5 entries only to not clutter the leaderboards too much.
+
+The view layer is meant to never change any core game rules or state, it is meant to only input the
+model or controller and draw this accordingly.
+
+### 3.3 Controller Component
+
+**Key classes:**
+
+- `Game`: the central controller and application **lifecycle** owner.
+  - **Responsibilities:**
+      - Construct and tie together the full application with model, view, audio, input, and states.
+      - Run the main loop (`run()`), calling `update()` and initializing the redrawing of the GUI.
+      - Communicate updates to the current `GameBaseState`.
+      - Bridge the model events (switching states) to "side effects" such as audio via **AudioController**, 
+    initiates the spawn platform reset, and to be querying leaderboard entries by communicating for example level-completed event
+            (via `LevelCompletedListener`) instead of calling hard-coded method.
+      - Manage the game's different states via the `setGameState(GameState newState)`.
+      - React to low-level model callbacks, for example implement `PlayerEventListener` so `Player` can report deaths without
+            depending on `Game`.
+- **States**
+    - `GameBaseState` abstract base: holds reference to `Game` and defines
+      `update()`, `render(g)`, `onEnter()`, `onExit()`.
+  - `PlayingState`: calls `game.updateGameState()` | `game.renderGame(g)`, and
+    is one of the responsibles for switching background music (for the correct state) track using
+    `onEnter()`.
+  - `MenuState`, `LeaderboardState`, `LevelSelectState`: does similar, switches
+    menu/leaderboard/level-select views into the state machine. `MenuState`
+    starts menu music using `onEnter()`, similarly to `PlayingState`.
+- Inputs & Commands
+    - `KeyboardInputs`:
+        - On key events, creates or dispatches `Command` objects
+          (`MoveLeftPressCommand`, `JumpPressCommand`, `TogglePauseCommand`, etc.).
+    - Each `Command` implements an `execute()` that calls into `Game` or
+      `Player`, serving as an abstraction layer in-between the component(s).
+    - `MouseInputs` also communicates mouse clicks to other UI elements (buttons, level select,
+      etc.) via the relevant state, part of this implementation was due to the importance of the haptic
+  feedback from our user stories.
+
+---
+
+## 4. Design Patterns: Summary
+
+### 4.1 MVC
+
+- **Model:** `GameModel`, `Player`, `LevelManager`, `Level`, entities.
+- **View:** `GameView`, `GamePanel`, `GameWindow`, menu/leaderboard views.
+- **Controller:** `Game`, `GameBaseState` and the derived states, input / command
+  classes.
+
+This separation using packages is visible in the directory structures as seen below:
+
+- `main.model` - model-level constructs.
+- `main.view` - rendering and Swing adapters.
+- `main.states` - states with controllers and their view logic.
+- `inputs`, `inputs.commands` - controllers for user input.
+- `Game`- once again, the main controller, root of the tree structure like MVC pattern.
+
+The rest is a bit self-explanatory from previous part: **3. MVC Components**
+
+### 4.2 State Pattern
+The **State pattern** is used to manage the several different states, in our case the higher level game "modes".
+Implemented via the abstract class `GameBaseState` and then inherited via the sub-class concrete states:
+`PlayingState`, `MenuState`, `LeaderboardState`, `LevelSelectState`. Using this abstraction we trigger these different
+states from other parts of the code.
+
+
+Each of the **Concrete States** extends `GameBaseState` and overrides `update()` along with
+`render(Graphics g)` to implement behavior specific to that **State** or **Mode**. For example,
+`PlayingState.update()` calls `game.updateGameState()`, and
+`PlayingState.render(g)` calls `game.renderGame(g)`.
+
+
+
+
+`Game` acts as the **Controller** for this, holding a reference to a `GameBaseState` and communicates work to it.
+Each concrete state class seperates the logic for one mode
+(menu,  gameplay, leaderboard, level select), making it easier to add or
+modify modes further in the future.
+In the `Game` objects constructor, implemented as current state is the: `private GameBaseState currentState;`
+and one instance of each concrete state (`playingState`, `menuState`,`leaderboardState`, `levelSelectState`).
+
+- State transitions are controlled from `Game.setGameState(GameState newState)`:
+    - It records the old state, updates its internal `gameState` enum (via Switch Cases), picks the
+      correct `currentState` instance based on `newState`, and then calls
+      `previousState.onExit()` and `currentState.onEnter()` when called upon.
+    - It also currently handles side effects that is related to states (resetting levels when
+      returning to menu, starting the run timer when entering PLAYING from
+      MENU), but this will be re-evaluated to potentially be implemented via the **Observer Pattern**.
+- In the `Game.run()` loop, the game's updates and rendering are communicated to the
+  current state, for example:
+    - `update()` checks for transitions (`model.isInTransition()`), then calls
+      `currentState.update()`.
+
+### 4.3 Command Pattern
+`inputs.commands.Command` is a interface completed with the single method of `execute()`. It represents an **action** 
+that potentially is triggered by an input.
+The input handling code (`KeyboardInputs` / `MouseInputs`) depends only on the `Command` abstraction, 
+not on any of the concrete game logic.
+Each command encapsulates an action to be performed on the model/controller, 
+making it easy to extend (by adding a new command sub-class) without modifying the input listener logic.
+- `Game` and `Player` act as **receivers** of these commands, but are unaware of the Command abstraction itself, 
+which keeps them seperate (or "decoupled") from the input layer.
+
+- **Keyboard I/O**:
+    - `inputs.KeyboardInputs` listens to key events from Swing.
+    - It maintains all mappings from any key codes implemented into the `Command` instances for press and release.
+    - On `keyPressed` | `keyReleased`, it looks up the correct `Command` and calls `execute()`.
+    - Concrete command classes such as `MoveLeftPressCommand`, `MoveLeftReleaseCommand`, 
+  `MoveRightPressCommand`, `MoveRightReleaseCommand`, `JumpPressCommand`, `JumpReleaseCommand`, 
+  `TogglePauseCommand`, and `GoToMenuCommand` each get parsed their own reference to `Game` through method `execute()`, 
+  call into `Game` (and via `Game` into `Player` or `GameModel`).
+
+
+- **Mouse I/O**:
+    - `inputs.MouseInputs` listens to mouse events from Swing.
+    - For `mouseMoved` and the object `mousePressed`, it constructs the specific state `Command` 
+    - objects based on `game.getGameState()`:
+        - In `MENU` state: `MenuMouseMoveCommand`, `MenuMousePressCommand`.
+        - In `LEVEL_SELECT` state: `LevelSelectMouseMoveCommand`, `LevelSelectMousePressCommand`.
+        - These different commands references the `Game` object and the mouse coordinates, and in `execute()` 
+   communictes with the correct view object (for example, `game.mainMenu.mouseMoved(x, y)` or
+`game.levelSelect.mousePressed(x, y)`). For example, seen in the GUI, adding haptics to the mouse hoovers
+or selection.
+
+### 4.4 Singleton Pattern
+
+`audio.controller.AudioController` implements a **Singleton Pattern**
+to provide a single audio object (controller) instance for the entire application. This means, only a single
+`AudioController` instance exists, and it is globally accessible via `getInstance()`.
+As part of the Design Pattern, the constructor is private, preventing a new instance being created.
+The **Singleton Pattern** design gives a better control over the implemented audio resources and avoids
+a problem encountered early on in the process, several conflicting JavaFX media (music) initializations.
+
+- It was implemented as a private static field and a **private constructor** that initializes
+      JavaFX (`startJavaFX()`) and loads all audio resources (`loadResources()`).
+
+
+- A public static synchronized method `public static synchronized AudioController getInstance()`
+  initially creates the singleton on first call and returns the same instance
+  thereafter. The `Synchronization` is necessary to prevent potential thread interference
+  when multiple threads access shared data that can be modified, hence also the singleton pattern.
+  
+
+- `Game` obtains the audio service by calling `AudioController.getInstance()`
+  in its constructor and stores it in `audioController`.
+
+
+- The other classes that need audio (such as `LevelManager` when wiring
+  audio to platforms) go through `Game.getAudioController()` or directly
+  through `AudioController.getInstance()`, ensuring there is only one audio
+  subsystem.
+
+### 4.5 Observer Pattern
+The project uses a lightweight **Observer** pattern in two layers:
+
+1. **Low-level model -> Game callbacks**
+    - `PlayerEventListener`:
+        - Implemented by `Game`.
+        - `Player` holds a `PlayerEventListener` reference and calls `onPlayerDeath()`
+          inside `die()`.
+        - `Game.onPlayerDeath()` updates the model (`model.onPlayerDeath()`) and
+          then notifies higher-level observers via `GameEventListener`.
+    - (Optionally) a `LevelChangeListener` can be used in `LevelManager` to
+      notify `Game` when `currentLevelIndex` changes, so `Game` can reload the
+      player for the new level. This decouples `LevelManager` from calling
+      `Game` methods directly.
+
+2. **High-level Game events -> other systems**
+    - `GameEventListener`:
+        - Interface with callbacks:
+            - `onPlayerDeath()`
+            - `onLevelCompleted(int levelIndex, int totalDeaths, double timeMs)`
+        - `Game` is the **subject** and maintains a list of observers:
+            - `private final List<GameEventListener> gameEventListeners = new ArrayList<>();`
+            - `addGameEventListener(...)` / `removeGameEventListener(...)` methods.
+        - When `Game.onPlayerDeath()` is called (via `PlayerEventListener`), it
+          iterates over `gameEventListeners` and calls `onPlayerDeath()` on each.
+    - `LevelCompletedListener`:
+        - A dedicated listener (or simply a default lambda in `Game`’s constructor)
+          is registered to handle level completion.
+        - In `Game.updateGameState()`, when `model.checkIsEndOfLevel()` returns
+          true, `Game` computes:
+            - `timeMs` from `GameModel`'s run timer,
+            - `levelIndex` from `LevelManager`,
+            - `totalDeaths` from `GameModel`.
+        - It then notifies all registered `LevelCompletedListener`s, including a
+          default one that:
+            - Appends a score line to `leaderboard.txt` via
+              `LoadSave.appendToScoreFile(playerName, levelIndex, timeMs, totalDeaths)`.
+            - Iterates over `gameEventListeners` and calls
+              `onLevelCompleted(levelIndex, totalDeaths, timeMs)` on each.
+    - This two-layer approach keeps the model decoupled from the controller
+      (via `PlayerEventListener`/`LevelChangeListener`) and the controller
+      decoupled from interested views/services (via `GameEventListener` and
+      `LevelCompletedListener`).
+
+
+
+---
+
+## 5. Future Improvements
+
+First of all, this document is a "snapshot" of the current design and implementation. Of course
+the project has not adhered towards strict purity in **MVC**, as we are still working towards a **Minimum Viable Product**,
+but will switch to a more **Finalized End-Product** later.
+
+### 5.1 Central `Game` controller
+
+`Game` has currently a lot of responsibilities (state machine, loop,
+construction of objects, some rule based side effects). This could mean that in the future there would be potential 
+to abstract it even further, reducing coupling such as isolating the `Leaderboard` logic into a separate
+module, such as a "`ScoreServicing`" or "`LeaderboardLogic`" interface.
+
+### 5.2 Observer Pattern
+To be very honest, this pattern has been a pain to implement due to our original structure, hence it's
+spread out non-coherent state throughout the project.
+But we want in the end the different `EventListener`s to be used even more
+broadly to decouple UI elements and logic from the core `Game` base.
+
+For example, `LevelManager` currently holds a reference back to `Game` for a few
+operations (accesses `Player` or `AudioController` for certain platform
+sounds) creating a bidirectional dependency. 
+
+It would also be a smart idea for a `LevelChangeListener` implemented by `Game`, and have
+`LevelManager` fire an event instead of calling back into `Game` for
+operations such as reloading the player (our current setup). 
+
+Summarized, there's an W.I.P. on this.
+
+### 5.3 Observer Pattern
+
+---
+
+## 6. Diagrams (Future)
+
+For expanding this into what would be a similar to a **Developers Guide** (as per previous courses)
+Diagrams such as:
+
+- **Static View diagram**: We already have the UML, but more abstract
+- **Sequence diagram(s)**: For a full level completion flow, I/O, View, etc.
+- **Deployment View diagram**: For overview of the architecture (user device to databases and packages).
+
+---
+
+## Conclusion
+
+The current system design according to our group has tried to adhere well to an
+**MVC Architecture**, the model which in turn is  supported by the different above mentioned **Design Patterns**.
+The responsibilities has been abstracted and tried to be as clear as possible regarding:
+- `Model`s encapsulate state(s) and rules.
+- `View`s are dedicated to drawing, and to the graphical interface.
+- `Controller`s handle coordination, input, events, and state transitions between all the elements.
+
+
+As written by the instructions and according to us (what we have done so far):
+
+***this SDD should be a solid snapshot 
+of our project's current design and good starting point 
+for future enhancements and work within this codespace.***

@@ -4,11 +4,12 @@ import audio.controller.AudioController;
 import entities.Player;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import Levels.LevelManager;
-import main.events.GameEventListener;
-import main.events.PlayerEventListener;
+import main.observerEvents.GameEventListener;
+import main.observerEvents.PlayerEventListener;
 import main.model.GameModel;
 import main.states.GameBaseState;
 import main.states.Leaderboard;
@@ -23,7 +24,7 @@ import main.view.GameView;
 import main.view.GameWindow;
 import utilz.LoadSave;
 
-public class Game implements Runnable, PlayerEventListener {
+public class Game extends PlayerEventListener implements Runnable {
 
     public static final int TILES_DEAFULT_SIZE = 32;
     public static final float SCALE = 1.0f;
@@ -46,6 +47,8 @@ public class Game implements Runnable, PlayerEventListener {
     private Player player;
     private LevelManager levelManager;
     private AudioController audioController; // audio
+
+
 
     public enum GameState {MENU, PLAYING, LEADERBOARD, LEVEL_SELECT}
 
@@ -122,6 +125,11 @@ public class Game implements Runnable, PlayerEventListener {
         currentState.update();
     }
 
+    @Override
+    public void update(String eventType, File file) {
+
+    }
+
     public void render(Graphics g) {
         currentState.render(g);
 
@@ -162,7 +170,6 @@ public class Game implements Runnable, PlayerEventListener {
         gametThread.start();
     }
 
-
     @Override
     public void run() {
         double timePerFrame = 1000000000.0 / FPS_SET;
@@ -201,6 +208,8 @@ public class Game implements Runnable, PlayerEventListener {
             }
         }
     }
+
+
 
     public Player getPlayer() {
         return player;
@@ -242,8 +251,6 @@ public class Game implements Runnable, PlayerEventListener {
             model.resetRunStats();
             loadPlayerForCurrentLevel();
         }
-
-
 
         //TODO Move into playingState: onEnter
         //If we are starting to play from the menu, start a fresh run (timer & deaths), for leaderboard

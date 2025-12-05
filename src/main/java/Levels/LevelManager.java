@@ -126,6 +126,7 @@ public class LevelManager {
         }
     }
 
+    //TODO move into view?
     public void draw(Graphics g) {
         BufferedImage img = LoadSave.getSpriteAtlas(LoadSave.BG_DATA);
         g.drawImage(img, 0, 0, GAME_WIDTH, GAME_HEIGHT, null);
@@ -145,6 +146,7 @@ public class LevelManager {
         currentLevel.drawDeathSprites(g);
     }
 
+    //TODO move into view?
     public void drawObjectLayer(Graphics g) {
         Level currentLevel = getCurrentLvl();
         for (int j = 0; j < Game.TILES_IN_HEIGHT; j++) {

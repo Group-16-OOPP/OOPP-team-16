@@ -1,14 +1,16 @@
-package main.events;
+package main.observerEvents;
+
+import java.io.File;
 
 /**
  * Observer for high-level game events such as player death and level completion,
  * keep adding more here if needed.
  * https://refactoring.guru/design-patterns/observer
  */
-public interface PlayerEventListener {
+public class PlayerEventListener implements EventListener {
 
     //Called whenever the player dies.
-    default void onPlayerDeath() {
+    public void onPlayerDeath() {
     }
 
     /**
@@ -17,7 +19,12 @@ public interface PlayerEventListener {
      * @param totalDeaths : total deaths
      * @param time : time taken
      */
-    default void onLevelCompleted() {
+    void onLevelCompleted() {
+    }
+
+    @Override
+    public void update(String eventType, File file) {
+
     }
 }
 

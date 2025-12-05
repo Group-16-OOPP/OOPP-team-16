@@ -111,6 +111,7 @@ public class KeyboardInputs implements KeyListener {
             }
         }
 
+        //TODO, abstract this to the key in the command, or put it into a listener. choices..
         // Play jump sound once per press
         if (isJumpKey(keyCode) && !keyDown) {
             game.getAudioController().playJump();

@@ -12,7 +12,7 @@ GamePanel              [shape = record, pos = "-0.788,7.397!"    , label = "{ Ga
 GameView               [shape = record, pos = "4.706,3.531!"     , label = "{ GameView | + GameView(GameModel) : \l|- drawHUD(Graphics) : void\l - drawPauseOverlay(Graphics) : void\l + renderGame(Graphics) : void\l + renderTransition(Graphics, BufferedImage) : void\l }"];
 GameWindow             [shape = record, pos = "4.425,-2.259!"    , label = "{ GameWindow | + GameWindow(GamePanel) : \l }"];
 MainClass              [shape = record, pos = "-8.243,-3.686!"   , label = "{ MainClass | + MainClass() : \l|+ main(String[]) : void\l }"];
-"package  main.events" [shape = record, pos = "-1.167,-9.113!"   , label = "{ \<\<package\>\>\npackage  main.events |  }"];
+"package  main.observerEvents" [shape = record, pos = "-1.167,-9.113!"   , label = "{ \<\<package\>\>\npackage  main.observerEvents |  }"];
 "package  main.states" [shape = record, pos = "10.983,1.683!"    , label = "{ \<\<package\>\>\npackage  main.states |  }"];
 
 Game                   -> GameModel              [color = "#595959", style = dashed, arrowtail = none    , arrowhead = vee     , taillabel = "", label = "«create»", headlabel = ""];
