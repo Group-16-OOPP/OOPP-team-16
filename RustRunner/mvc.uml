@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>main.model</OriginalElement>
+  <nodes>
+    <node x="338.86201451742454" y="1099.7912120040078">main.view.GameView</node>
+    <node x="-593.5076149772198" y="1619.3897349974688">main.MainClass</node>
+    <node x="-84.0" y="2010.106023916373">main.events</node>
+    <node x="-122.0" y="1314.5">main.Game</node>
+    <node x="318.56412443615636" y="1516.6609543071077">main.view.GameWindow</node>
+    <node x="-56.710653697743055" y="821.4056006599873">main.view.GamePanel</node>
+    <node x="790.7690379279852" y="1232.7912120040078">main.states</node>
+    <node x="-553.5641244361564" y="685.5303628133702">main.model.GameModel</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="main.Game" target="main.view.GameView" relationship="CREATE">
+      <point x="-69.5" y="-298.5" />
+      <point x="-52.5" y="1443.3264312744143" />
+      <point x="510.86201451742454" y="1443.3264312744143" />
+      <point x="0.0" y="80.5" />
+    </edge>
+    <edge source="main.Game" target="main.model.GameModel" relationship="TO_ONE">
+      <point x="69.5" y="-298.5" />
+      <point x="86.5" y="1460.9841343374812" />
+      <point x="-351.81412443615636" y="1460.9841343374812" />
+      <point x="67.25" y="370.5" />
+    </edge>
+    <edge source="main.view.GameView" target="main.model.GameModel" relationship="TO_ONE">
+      <point x="0.0" y="-80.5" />
+      <point x="510.86201451742454" y="713.0" />
+      <point x="-351.81412443615636" y="713.0" />
+      <point x="67.25" y="370.5" />
+    </edge>
+    <edge source="main.Game" target="main.model.GameModel" relationship="CREATE">
+      <point x="-69.5" y="-298.5" />
+      <point x="-52.5" y="1493.99984107298" />
+      <point x="-486.31412443615636" y="1493.99984107298" />
+      <point x="-67.25" y="370.5" />
+    </edge>
+    <edge source="main.Game" target="main.view.GameWindow" relationship="TO_ONE">
+      <point x="69.5" y="-298.5" />
+      <point x="86.5" y="1535.409010831048" />
+      <point x="482.06412443615636" y="1535.409010831048" />
+      <point x="54.5" y="31.5" />
+    </edge>
+    <edge source="main.Game" target="main.view.GameView" relationship="TO_ONE">
+      <point x="69.5" y="-298.5" />
+      <point x="86.5" y="1377.5979684380925" />
+      <point x="422.90738520902767" y="1377.5979684380925" />
+      <point x="422.90738520902767" y="1246.928922372706" />
+      <point x="510.86201451742454" y="1246.928922372706" />
+      <point x="0.0" y="-80.5" />
+    </edge>
+    <edge source="main.Game" target="main.view.GamePanel" relationship="CREATE">
+      <point x="-69.5" y="-298.5" />
+      <point x="-103.38973499746885" y="1314.5" />
+      <point x="-103.38973499746885" y="1366.015706735499" />
+      <point x="5.039346302256945" y="1366.015706735499" />
+      <point x="-61.75" y="94.5" />
+    </edge>
+    <edge source="main.MainClass" target="main.Game" relationship="CREATE">
+      <point x="0.0" y="-44.5" />
+      <point x="-510.50761497721976" y="1663.8897349974688" />
+      <point x="-52.5" y="1663.8897349974688" />
+      <point x="-69.5" y="-298.5" />
+    </edge>
+    <edge source="main.view.GamePanel" target="main.Game" relationship="TO_ONE">
+      <point x="61.75" y="94.5" />
+      <point x="128.53934630225694" y="1468.3144525640153" />
+      <point x="86.5" y="1468.3144525640153" />
+      <point x="69.5" y="-298.5" />
+    </edge>
+    <edge source="main.Game" target="main.view.GamePanel" relationship="TO_ONE">
+      <point x="69.5" y="-298.5" />
+      <point x="66.78934630225694" y="1314.5" />
+      <point x="66.78934630225694" y="975.6457243526681" />
+      <point x="128.53934630225694" y="975.6457243526681" />
+      <point x="61.75" y="94.5" />
+    </edge>
+    <edge source="main.Game" target="main.view.GameWindow" relationship="CREATE">
+      <point x="-69.5" y="-298.5" />
+      <point x="-52.5" y="1559.7475797428806" />
+      <point x="318.5818230078107" y="1559.7475797428806" />
+      <point x="318.5818230078107" y="1579.6609543071077" />
+      <point x="-54.5" y="31.5" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Compact" zoom="0.48005370700490085" showDependencies="true" x="542.527752631052" y="1601.6032696571242" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Constructors</Category>
+    <Category>Fields</Category>
+    <Category>Methods</Category>
+    <Category>Properties</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

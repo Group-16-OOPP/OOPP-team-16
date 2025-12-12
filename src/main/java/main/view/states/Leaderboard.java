@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import main.controller.Game;
-import utilz.LoadSave;
+import utilities.LoadSave;
 
 public class Leaderboard {
     private final Game game;

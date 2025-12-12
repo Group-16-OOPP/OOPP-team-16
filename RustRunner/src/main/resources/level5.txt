@@ -1,0 +1,18 @@
+# Level 5 Configuration
+spawnX=96
+spawnY=160
+spawnPlatform=96,0,32,128,64,3.0
+
+spike=1,41
+spike=2,42
+triggerSpike=3,41,0,-16,5.0,50.0,false
+
+groupedTriggerPlatform=4,0,32,5.0,false,true
+groupedTriggerPlatform=5,0,96,5.0,false,true
+groupedTriggerPlatform=6,0,96,5.0,false,true
+groupedTriggerPlatform=7,32,0,10.0,true,true
+
+triggerSpike=8,43,-1064,0,0.4,5000.0,false
+
+
+

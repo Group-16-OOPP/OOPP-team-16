@@ -4,10 +4,10 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import main.controller.Game;
-import utilz.LoadSave;
+import utilities.LoadSave;
 
-import static utilz.Constants.PlayerConstants.*;
-import static utilz.HelpMethods.*;
+import static utilities.Constants.PlayerConstants.*;
+import static utilities.HelpMethods.*;
 
 public class Player extends Entity {
 

@@ -278,7 +278,7 @@ public class Level {
 
                 if (verticallyAligned && horizontallyOverlapping) {
                     // Check if player can move here before applying the movement
-                    if (utilz.HelpMethods.canMoveHere(
+                    if (utilities.HelpMethods.canMoveHere(
                             player.getHitbox().x + dx,
                             player.getHitbox().y + dy,
                             player.getHitbox().width,
@@ -323,7 +323,7 @@ public class Level {
         }
 
         // Find the ground Y position - use player's Y if on ground, otherwise find ground below
-        float groundY = utilz.HelpMethods.findGroundY(x, y, Game.TILES_SIZE, lvlData);
+        float groundY = utilities.HelpMethods.findGroundY(x, y, Game.TILES_SIZE, lvlData);
 
         // Only place death sprite if there's valid ground (not -1)
         if (groundY >= 0) {

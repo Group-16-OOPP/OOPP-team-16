@@ -6,7 +6,7 @@ import java.util.List;
 import main.model.Levels.LevelManager;
 import main.model.entities.Player;
 import main.model.observerEvents.GameObserver;
-import utilz.LoadSave;
+import utilities.LoadSave;
 
 public class GameModel {
 
@@ -34,22 +34,18 @@ public class GameModel {
     private long startTime;
     private int totalDeaths;
 
-    private boolean paused = false;
+    private boolean isPaused = false;
 
     public GameModel(Player player, LevelManager levelManager) {
         this.player = player;
         this.levelManager = levelManager;
     }
 
-    // --- Observer Pattern Logic ---
+    //Observer ---------------
     public void addObserver(GameObserver observer) {
         if (!observers.contains(observer)) {
             observers.add(observer);
         }
-    }
-
-    public void removeObserver(GameObserver observer) {
-        observers.remove(observer);
     }
 
     private void notifyPlayerDied() {
@@ -82,7 +78,7 @@ public class GameModel {
         }
     }
 
-    // --- Update Loop ---
+    //Update Loop---------------------------
     public void update() {
         if (inTransition) {
             updateTransition();
@@ -95,7 +91,7 @@ public class GameModel {
     }
 
     private void updatePlaying() {
-        if (paused) {
+        if (isPaused) {
             return;
         }
 
@@ -173,7 +169,7 @@ public class GameModel {
 
     public void togglePause() {
         if (isActive && !inTransition) {
-            paused = !paused;
+            isPaused = !isPaused;
         }
     }
 
@@ -204,7 +200,7 @@ public class GameModel {
         currentLevel.clearDeathPositions();
     }
 
-    // Scoring and persistence related to model state
+    // Scoring -----------------------------------
     public void recordLevelCompletion() {
         long runEndTimeNanos = System.nanoTime();
         double timeSeconds = (runEndTimeNanos - startTime) / 1_000_000_000.0;
@@ -212,7 +208,7 @@ public class GameModel {
         LoadSave.appendToScoreFile(playerName, levelIndex, timeSeconds, totalDeaths);
     }
 
-    // --- Getters & Setters ---
+    //Getters & Setters ---
     public Player getPlayer() {
         return player;
     }
@@ -222,7 +218,7 @@ public class GameModel {
     }
 
     public boolean isPaused() {
-        return paused;
+        return isPaused;
     }
 
     public boolean isInTransition() {

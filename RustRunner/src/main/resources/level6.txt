@@ -1,0 +1,12 @@
+# Level 5 Configuration
+spawnX=96
+spawnY=160
+spawnPlatform=96,0,32,128,64,3.0
+
+spike=1,44
+spike=2,41
+spike=3,43
+spike=4,42
+
+
+

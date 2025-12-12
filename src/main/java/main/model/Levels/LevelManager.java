@@ -11,7 +11,7 @@ import main.controller.Game;
 import static main.controller.Game.GAME_HEIGHT;
 import static main.controller.Game.GAME_WIDTH;
 import static main.controller.Game.TILES_SIZE;
-import utilz.LoadSave;
+import utilities.LoadSave;
 
 public class LevelManager {
     private Game game;

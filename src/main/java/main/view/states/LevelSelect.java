@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import main.model.Levels.LevelManager;
 import main.controller.Game;
-import utilz.LoadSave;
+import utilities.LoadSave;
 
 public class LevelSelect {
     // Grid layout

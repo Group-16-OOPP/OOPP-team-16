@@ -1,0 +1,9 @@
+# Level 1 Configuration
+spawnX=230
+spawnY=600
+spawnPlatform=224,448,32,128,64,3.0
+groupedTriggerPlatform=1,32,0,2.0,true,true
+groupedTriggerPlatform=2,32,0,2.0,true,true
+spike=3,41
+
+

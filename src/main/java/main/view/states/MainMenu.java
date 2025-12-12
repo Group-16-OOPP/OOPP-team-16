@@ -57,34 +57,34 @@ public class MainMenu {
     private void loadButtonImages() {
         // Load images for each button [normal, hover, click]
         buttonImages.add(new BufferedImage[]{
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.PLAY_BUTTON_NORMAL),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.PLAY_BUTTON_HOVER),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.PLAY_BUTTON_CLICK)
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.PLAY_BUTTON_NORMAL),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.PLAY_BUTTON_HOVER),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.PLAY_BUTTON_CLICK)
         });
         buttonImages.add(new BufferedImage[]{
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.CHANGE_PLAYER_BUTTON_NORMAL),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.CHANGE_PLAYER_BUTTON_HOVER),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.CHANGE_PLAYER_BUTTON_CLICK)
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.CHANGE_PLAYER_BUTTON_NORMAL),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.CHANGE_PLAYER_BUTTON_HOVER),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.CHANGE_PLAYER_BUTTON_CLICK)
         });
         buttonImages.add(new BufferedImage[]{
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.SELECT_LEVEL_BUTTON_NORMAL),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.SELECT_LEVEL_BUTTON_HOVER),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.SELECT_LEVEL_BUTTON_CLICK)
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.SELECT_LEVEL_BUTTON_NORMAL),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.SELECT_LEVEL_BUTTON_HOVER),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.SELECT_LEVEL_BUTTON_CLICK)
         });
         buttonImages.add(new BufferedImage[]{
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.LEADERBOARDS_BUTTON_NORMAL),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.LEADERBOARDS_BUTTON_HOVER),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.LEADERBOARDS_BUTTON_CLICK)
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.LEADERBOARDS_BUTTON_NORMAL),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.LEADERBOARDS_BUTTON_HOVER),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.LEADERBOARDS_BUTTON_CLICK)
         });
         buttonImages.add(new BufferedImage[]{
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.QUIT_BUTTON_NORMAL),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.QUIT_BUTTON_HOVER),
-            utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.QUIT_BUTTON_CLICK)
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.QUIT_BUTTON_NORMAL),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.QUIT_BUTTON_HOVER),
+            utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.QUIT_BUTTON_CLICK)
         });
     }
 
     private void loadBackgroundImage() {
-        backgroundImage = utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.MENU_BACKGROUND);
+        backgroundImage = utilities.LoadSave.getSpriteAtlas(utilities.LoadSave.MENU_BACKGROUND);
     }
 
     private void initializeButtonStates() {

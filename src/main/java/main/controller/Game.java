@@ -17,7 +17,7 @@ import main.view.states.*;
 import main.view.GamePanel;
 import main.view.GameView;
 import main.view.GameWindow;
-import utilz.LoadSave;
+import utilities.LoadSave;
 
 public class Game implements Runnable, GameObserver {
 

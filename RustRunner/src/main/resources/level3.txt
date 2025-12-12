@@ -1,0 +1,20 @@
+# Level 3 Configuration
+spawnX=100
+spawnY=150
+spawnPlatform=96,96,32,128,64,3.0
+triggerSpike=1,41,0,-16,5.0,50.0,false
+triggerSpike=2,41,0,-16,5.0,50.0,false
+triggerSpike=3,41,0,-16,5.0,50.0,false
+triggerSpike=4,41,0,-16,5.0,50.0,false
+triggerSpike=5,42,0,48,5.0,50.0,false
+groupedTriggerPlatform=6,64,0,5.0,false,true
+triggerSpike=7,41,0,-16,5.0,60.0,true
+triggerSpike=8,41,0,-16,5.0,60.0,true
+triggerSpike=9,41,0,-96,2.0,50.0,true
+triggerSpike=11,42,0,48,2.0,80.0,true
+triggerSpike=12,42,0,48,2.0,80.0,true
+triggerSpike=13,42,0,48,2.0,80.0,true
+triggerSpike=14,42,0,48,2.0,80.0,true
+groupedTriggerPlatform=10,-64,0,5.0,true,true
+spawnPlatform=96,0,32,128,64,3.0
+

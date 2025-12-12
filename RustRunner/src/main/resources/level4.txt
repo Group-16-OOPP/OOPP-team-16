@@ -1,0 +1,13 @@
+# Level 4 Configuration
+spawnX=96
+spawnY=672
+spawnPlatform=96,512,32,128,64,3.0
+
+spike=1,41
+triggerSpike=2,42,0,16,5.0,50.0,false
+triggerSpike=3,41,0,-16,5.0,50.0,false
+triggerSpike=4,41,0,-16,5.0,50.0,false
+triggerSpike=5,41,0,-16,5.0,50.0,false
+spike=6,41
+triggerSpike=7,41,0,-700,0.2,500.0,false
+
