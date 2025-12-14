@@ -221,6 +221,18 @@ public class MainMenu {
         }
     }
 
+    public void mouseClicked(int x, int y) {
+        if (editingName) {
+            return;
+        }
+        for (int i = 0; i < bounds.size(); i++) {
+            if (bounds.get(i).contains(x, y)) {
+                handleSelection(i);
+                return;
+            }
+        }
+    }
+
     private void handleSelection(int choice) {
         switch (choice) {
         case 0:

@@ -9,6 +9,7 @@ import java.util.List;
 import Levels.LevelManager;
 import audio.controller.AudioController;
 import entities.Player;
+import main.controller.GameController;
 import main.model.GameModel;
 import main.observerEvents.GameEventListener;
 import main.observerEvents.PlayerEventListener;
@@ -65,6 +66,7 @@ public class Game extends PlayerEventListener implements Runnable {
 
     private final List<GameEventListener> gameEventListeners = new ArrayList<>();
     private GameModel model;
+    private GameController controller;
     private GameView view;
 
     public Game() {
@@ -88,6 +90,7 @@ public class Game extends PlayerEventListener implements Runnable {
         loadPlayerForCurrentLevel();
 
         model = new GameModel(player, levelManager);
+        controller = new GameController(model, player, levelManager);
         view = new GameView(model);
 
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
@@ -120,7 +123,7 @@ public class Game extends PlayerEventListener implements Runnable {
 
     private void update() {
         if (model.isInTransition()) {
-            model.updateTransition();
+            controller.updateTransition();
             return;
         }
         currentState.update();
@@ -139,22 +142,22 @@ public class Game extends PlayerEventListener implements Runnable {
 
     //TODO maybe check if we can move this into observer patterns?
     public void updateGameState() {
-        model.updatePlaying();
+        controller.updatePlaying();
 
         //TODO Abstract so that it listens for "PlayerDeath"
-        if (model.checkIsDead()) {
+        if (controller.checkIsDead()) {
             audioController.playDead();
             levelManager.getCurrentLvl().triggerSpawnPlatform();
         }
 
         ///TODO Abstract so that it listens for "PlayerRespawn"
-        if (model.checkIsRespawn()) {
+        if (controller.checkIsRespawn()) {
             audioController.playRespawn();
             levelManager.getCurrentLvl().resetPlatforms();
         }
 
         //TODO Abstract so that it listens for "LvlCompletedEvent"
-        if (model.checkIsEndOfLevel()) {
+        if (controller.checkIsEndOfLevel()) {
             levelCompletedScoringUpdate();
             audioController.playNextLevel();
 
@@ -263,6 +266,7 @@ public class Game extends PlayerEventListener implements Runnable {
         //If we are starting to play from the menu, start a fresh run (timer & deaths), for leaderboard
         if (newState == GameState.PLAYING && oldState == GameState.MENU) {
             model.startNewRunTimer();
+            loadPlayerForCurrentLevel();
         }
 
         //If we are starting to play from the level select menu, load the player for the selected level
@@ -291,7 +295,7 @@ public class Game extends PlayerEventListener implements Runnable {
     //TODO move into EventListner / Observer abstration here?
     @Override
     public void onPlayerDeath() {
-        model.onPlayerDeath();
+        controller.onPlayerDeath();
 
         for (GameEventListener listener : gameEventListeners) {
             listener.onPlayerDeath();

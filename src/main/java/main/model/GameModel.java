@@ -100,18 +100,9 @@ public class GameModel {
         runStartTimeNanos = System.nanoTime();
     }
 
-    //TODO add to event listener, fine line between what is model vs controller behaviour....
-    public void onPlayerDeath() {
+    // Pure data methods - business logic moved to GameController
+    public void incrementTotalDeathsForRun() {
         totalDeathsForRun++;
-    }
-
-
-    //TODO same here..
-    public void startLevelTransition() {
-        inTransition = true;
-        scalingUp = true;
-        isLevelLoaded = false;
-        transitionScale = 0f;
     }
 
     public void resetTransition() {
@@ -119,6 +110,61 @@ public class GameModel {
         scalingUp = true;
         isLevelLoaded = false;
         transitionScale = 0f;
+    }
+
+    // Accessor methods for controller
+    public void resetEdgeFlags() {
+        isDead = false;
+        isRespawn = false;
+        isEndOfLevel = false;
+    }
+
+    public boolean wasPlayerDead() {
+        return wasPlayerDead;
+    }
+
+    public void setWasPlayerDead(boolean wasPlayerDead) {
+        this.wasPlayerDead = wasPlayerDead;
+    }
+
+    public void setDead(boolean isDead) {
+        this.isDead = isDead;
+    }
+
+    public void setRespawn(boolean isRespawn) {
+        this.isRespawn = isRespawn;
+    }
+
+    public void setEndOfLevel(boolean isEndOfLevel) {
+        this.isEndOfLevel = isEndOfLevel;
+    }
+
+    public boolean isScalingUp() {
+        return scalingUp;
+    }
+
+    public void setScalingUp(boolean scalingUp) {
+        this.scalingUp = scalingUp;
+    }
+
+    public boolean isLevelLoaded() {
+        return isLevelLoaded;
+    }
+
+    public void setLevelLoaded(boolean isLevelLoaded) {
+        this.isLevelLoaded = isLevelLoaded;
+    }
+
+    public void setInTransition(boolean inTransition) {
+        this.inTransition = inTransition;
+    }
+
+    public void setTransitionScale(float transitionScale) {
+        this.transitionScale = transitionScale;
+    }
+
+    public float getTransitionSpeed() {
+        return TRANSITION_SPEED;
     }
 
     //True only on the frame where the player has just transitioned from alive to dead
@@ -136,57 +182,5 @@ public class GameModel {
         return isEndOfLevel;
     }
 
-    public void updatePlaying() {
-        if (paused) {
-            return;
-        }
-
-        // Reset edge flags at the start of the frame
-        isDead = false;
-        isRespawn = false;
-        isEndOfLevel = false;
-
-        boolean isPlayerDead = player.getHitbox().x > 1500;
-        if (!wasPlayerDead && isPlayerDead) {
-            // Player has just died this frame
-            isDead = true;
-        }
-        if (wasPlayerDead && !isPlayerDead) {
-            // Player has just respawned this frame
-            isRespawn = true;
-        }
-        wasPlayerDead = isPlayerDead;
-
-        player.update();
-        levelManager.update();
-
-        if (player.hasReachedLevelEnd()) {
-            isEndOfLevel = true;
-            startLevelTransition();
-            player.resetLevelEnd();
-        }
-    }
-
-    public void updateTransition() {
-        if (scalingUp) {
-            transitionScale += TRANSITION_SPEED;
-            if (transitionScale >= 2f) {
-                transitionScale = 2f;
-                if (!isLevelLoaded) {
-                    levelManager.setLevelScore(player.getDeathCount());
-                    player.resetDeathCount();
-                    levelManager.loadNextLevel();
-                    player.resetLevelEnd();
-                    isLevelLoaded = true;
-                }
-                scalingUp = false;
-            }
-        } else {
-            transitionScale -= TRANSITION_SPEED;
-            if (transitionScale <= 0f) {
-                transitionScale = 0f;
-                inTransition = false;
-            }
-        }
-    }
+    // Pure data accessors for controller
 }

@@ -245,5 +245,21 @@ public class LevelSelect {
         levelManager.setCurrentLevelIndex(levelIndex);
         game.setGameState(Game.GameState.PLAYING);
     }
+
+    public void mouseClicked(int x, int y) {
+        // Back button click
+        if (backButtonBounds.contains(x, y)) {
+            game.setGameState(Game.GameState.MENU);
+            return;
+        }
+
+        // Level click
+        for (int i = 0; i < levelBounds.size(); i++) {
+            if (levelBounds.get(i).contains(x, y)) {
+                handleLevelSelection(i);
+                return;
+            }
+        }
+    }
 }
 

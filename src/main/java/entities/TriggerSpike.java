@@ -1,125 +1,72 @@
 package entities;
 
 import java.awt.Graphics;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+
+import main.controller.entities.SpikeController;
+import main.model.entities.SpikeModel;
+import main.view.entities.SpikeRenderer;
 
 public class TriggerSpike extends Entity {
 
-    private float startX;
-    private float startY;
-    private float targetX;
-    private float targetY;
-    private float speed;
-    private BufferedImage sprite;
-    private boolean triggered = false;
-    private boolean reachedTarget = false;
-    private float triggerDistance;
-    private boolean shouldReturn;
-    private boolean movingToTarget = true;
-    private boolean waitingAtTarget = false;
-    private long waitStartTime;
-    private long waitDurationMs = 500;
-    private int id = -1; // Default ID means no group
+    // MVC Architecture Components
+    private SpikeModel model;
+    private SpikeController controller;
+    private SpikeRenderer renderer;
 
     public TriggerSpike(float x, float y, float targetX, float targetY, int width, int height,
                         float speed, float triggerDistance, BufferedImage sprite, boolean shouldReturn, int id,
                         int collisionWidth, int collisionHeight) {
         super(x, y, width, height);
-        this.startX = x;
-        this.startY = y;
-        this.targetX = targetX;
-        this.targetY = targetY;
-        this.speed = speed;
-        this.triggerDistance = triggerDistance;
-        this.sprite = sprite;
-        this.shouldReturn = shouldReturn;
-        this.id = id;
-        
-        // Calculate centered collision box relative to tile
-        int xOffset = (width - collisionWidth) / 2;
-        int yOffset = (height - collisionHeight) / 2;
-        initHitbox(x + xOffset, y + yOffset, collisionWidth, collisionHeight);
+
+        // Initialize MVC components
+        model = new SpikeModel(x, y, targetX, targetY, width, height, speed, triggerDistance,
+                              sprite, shouldReturn, id, collisionWidth, collisionHeight);
+        controller = new SpikeController(model);
+        renderer = new SpikeRenderer(model);
     }
 
     public int getId() {
-        return id;
+        return controller.getId();
     }
 
     public void update() {
-        if (!triggered || reachedTarget) {
-            return;
-        }
-
-        if (waitingAtTarget) {
-            if (System.currentTimeMillis() - waitStartTime >= waitDurationMs) {
-                waitingAtTarget = false;
-                movingToTarget = false;
-            }
-            return;
-        }
-
-        float destX = movingToTarget ? targetX : startX;
-        float destY = movingToTarget ? targetY : startY;
-
-        float dx = destX - hitbox.x;
-        float dy = destY - hitbox.y;
-        float dist = (float) Math.sqrt(dx * dx + dy * dy);
-
-        if (dist <= speed) {
-            hitbox.x = destX;
-            hitbox.y = destY;
-
-            if (movingToTarget && shouldReturn) {
-                waitingAtTarget = true;
-                waitStartTime = System.currentTimeMillis();
-            } else {
-                reachedTarget = true;
-            }
-        } else {
-            hitbox.x += (dx / dist) * speed;
-            hitbox.y += (dy / dist) * speed;
-        }
+        controller.update();
     }
 
     public void render(Graphics g) {
-        if (sprite != null) {
-            g.drawImage(sprite, (int) hitbox.x, (int) (hitbox.y - hitbox.height),
-                    (int) hitbox.width, (int) (hitbox.height * 2), null);
-        } else {
-            g.setColor(java.awt.Color.MAGENTA);
-            g.fillRect((int) hitbox.x, (int) hitbox.y, (int) hitbox.width, (int) hitbox.height);
-        }
+        renderer.render(g);
     }
 
     public boolean checkTriggerDistance(Entity player) {
-        float px = player.getHitbox().x + player.getHitbox().width / 2;
-        float py = player.getHitbox().y + player.getHitbox().height / 2;
-        float sx = hitbox.x + hitbox.width / 2;
-        float sy = hitbox.y + hitbox.height / 2;
-
-        float dist = (float) Math.sqrt((px - sx) * (px - sx) + (py - sy) * (py - sy));
-        return dist <= triggerDistance;
+        return controller.checkTriggerDistance(player);
     }
 
     public boolean checkPlayerCollision(Entity player) {
-        return hitbox.intersects(player.getHitbox());
+        return model.getHitbox().intersects(player.getHitbox());
     }
 
     public void trigger() {
-        triggered = true;
+        controller.trigger();
     }
 
     public boolean isTriggered() {
-        return triggered;
+        return controller.isTriggered();
     }
 
     public void reset() {
-        hitbox.x = startX;
-        hitbox.y = startY;
-        triggered = false;
-        reachedTarget = false;
-        movingToTarget = true;
-        waitingAtTarget = false;
+        model.getHitbox().x = model.getStartX();
+        model.getHitbox().y = model.getStartY();
+        model.setTriggered(false);
+        model.setReachedTarget(false);
+        model.setMovingToTarget(true);
+        model.setWaitingAtTarget(false);
+    }
+
+    @Override
+    public Rectangle2D.Float getHitbox() {
+        return model.getHitbox();
     }
 }
 
