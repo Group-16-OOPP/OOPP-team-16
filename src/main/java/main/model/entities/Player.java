@@ -1,331 +1,131 @@
-package main.model.entities;
+package entities;
 
 import java.awt.Graphics;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
-import main.controller.Game;
-import utilities.LoadSave;
+import main.Game;
+import main.controller.entities.PlayerController;
+import main.model.entities.PlayerModel;
+import main.observerEvents.PlayerEventListener;
+import main.view.entities.PlayerRenderer;
 
-import static utilities.Constants.PlayerConstants.*;
-import static utilities.HelpMethods.*;
+import utilz.LoadSave;
 
 public class Player extends Entity {
+    // MVC Architecture Components
+    private PlayerModel model;
+    private PlayerController controller;
+    private PlayerRenderer renderer;
 
-    private static final long RESPAWN_DELAY_MS = 500;
-
-    private BufferedImage[][] animation;
-    private int aniTick;
-    private int aniIndex;
-    private int aniSpeed = 15;
-    private int playerAction = IDLE_RIGHT;
-    private boolean isLeft;
-    private boolean isRight;
-    private boolean facingRight;
-    private boolean isMoving = false;
-    private boolean isJump = false;
-    private float playerSpeed = 1.0f;
-
-    // Jumping / gravity mechanic
-    private float airSpeed = 0f;
-    private float gravity = 0.04f * Game.SCALE;
-    private float jumpSpeed = -2.5f;
-    private float fallSpeedAfterCollision = 0.5f * Game.SCALE;
-    private boolean inAir = false;
-
-    private int[][] lvlData;
-    private float xDrawOffset = 9.5f * Game.SCALE;
-    private float yDrawOffset = 8.25f * Game.SCALE;
-
-    private float spawnX;
-    private float spawnY;
-
-    // State flags
-    private boolean isDead = false;
-    private long deathTime = 0;
-    private boolean reachedLevelEnd = false;
-    private int currDeathCount = 0;
-
-    private main.model.Levels.Level currentLevel;
+    // Legacy support - keep minimal fields for backward compatibility
+    private Levels.Level currentLevel;
 
     public Player(float x, float y, int width, int height) {
         super(x, y, width, height);
-        loadAnimatons();
-        initHitbox(x, y, 12 * Game.SCALE, 22 * Game.SCALE);
-        spawnX = x;
-        spawnY = y;
+
+        // Initialize MVC components
+        model = new PlayerModel(x, y, width, height);
+        BufferedImage[][] animations = loadAnimations();
+        controller = new PlayerController(model);
+        renderer = new PlayerRenderer(model, animations);
+
+        // Initialize hitbox through model
+        model.getHitbox().setRect(x, y, 12 * Game.SCALE, 22 * Game.SCALE);
+    }
+
+    public void setPlayerEventListener(PlayerEventListener listener) {
+        controller.setPlayerEventListener(listener);
     }
 
     public void update() {
-        if (isDead) {
-            // Wait for respawn timer
-            if (System.currentTimeMillis() - deathTime >= RESPAWN_DELAY_MS) {
-                respawn();
-            }
-            return;
-        }
-
-        if (isEntityDead(hitbox, lvlData)
-                || (currentLevel != null && currentLevel.checkSpikeCollision(this))
-                || (currentLevel != null && currentLevel.checkTriggerSpikeCollision(this))) {
-            die();
-            return;
-        }
-
-        //level completion
-        if (isOnLevelEnd(hitbox, lvlData)) {
-            reachedLevelEnd = true;
-        }
-
-        updatePos();
-        updateAnimationTick();
-        setAnimation();
+        controller.update();
     }
-
-    private void die() {
-        currDeathCount += 1;
-        isDead = true;
-        deathTime = System.currentTimeMillis();
-
-        //Record visual death position
-        if (currentLevel != null) {
-            BufferedImage deathSprite = LoadSave.getSpriteAtlas(LoadSave.PLAYER_DEAD);
-            currentLevel.recordDeathPosition(hitbox.x - xDrawOffset, hitbox.y - yDrawOffset, deathSprite);
-        }
-
-        //Move player off-screen
-        //change (x > 1500) -> "onPlayerDied" observer event.
-        hitbox.x = 2000;
-        hitbox.y = 2000;
-
-        resetInAir();
-        resetDirBooleans();
-    }
-
-    private void respawn() {
-        isDead = false;
-        hitbox.x = spawnX;
-        hitbox.y = spawnY;
-
-        resetDirBooleans();
-        airSpeed = 0;
-        isMoving = false;
-        isJump = false;
-
-        inAir = !isEntityOnFloor(hitbox, lvlData);
-    }
-
-    public void updatePos() {
-        isMoving = false;
-        if (isJump) {
-            jump();
-        }
-
-        if (!isLeft && !isRight && !inAir) {
-            return;
-        }
-        float xSpeed = 0;
-
-        if (isLeft) {
-            xSpeed -= playerSpeed;
-        }
-
-        if (isRight) {
-            xSpeed += playerSpeed;
-        }
-
-        if (!inAir) {
-            if (!isEntityOnFloor(hitbox, lvlData) && (currentLevel == null ||
-                    !currentLevel.isOnSolidPlatform(hitbox))) {
-                inAir = true;
-            }
-        }
-
-        if (inAir) {
-            if (canMoveHere(hitbox.x, hitbox.y + airSpeed, hitbox.width,
-                    hitbox.height, lvlData)) {
-                hitbox.y += airSpeed;
-                airSpeed += gravity;
-                updateXPos(xSpeed);
-
-                if (currentLevel != null && airSpeed > 0) {
-                    float platformY = currentLevel.getSolidPlatformY(hitbox, airSpeed);
-                    if (platformY >= 0) {
-                        hitbox.y = platformY;
-                        resetInAir();
-                    }
-                }
-            } else {
-                hitbox.y = getEntityYPosUnderOrAbove(hitbox, airSpeed);
-                if (airSpeed > 0) {
-                    resetInAir();
-                } else {
-                    airSpeed = fallSpeedAfterCollision;
-                }
-                updateXPos(xSpeed);
-            }
-        } else {
-            updateXPos(xSpeed);
-        }
-        isMoving = true;
-    }
-
-    private void jump() {
-        if (inAir) {
-            return;
-        }
-        inAir = true;
-        airSpeed = jumpSpeed;
-    }
-
-    private void resetInAir() {
-        inAir = false;
-        airSpeed = 0;
-    }
-
-    private void updateXPos(float xSpeed) {
-        if (canMoveHere(hitbox.x + xSpeed, hitbox.y, hitbox.width,
-                hitbox.height, lvlData)) {
-            hitbox.x += xSpeed;
-        } else {
-            hitbox.x = getEntityXPosNextToWall(hitbox, xSpeed);
-        }
-    }
-
-    //Getters & Setters ------------------------
 
     public boolean hasReachedLevelEnd() {
-        return reachedLevelEnd;
+        return controller.hasReachedLevelEnd();
     }
 
     public void resetLevelEnd() {
-        reachedLevelEnd = false;
+        controller.resetLevelEnd();
     }
 
-    public int getDeathCount() {
-        return currDeathCount;
+
+    public void render(Graphics g) {
+        renderer.render(g);
+        //drawHitbox(g); // Optional debug rendering
     }
 
-    public void resetDeathCount() {
-        currDeathCount = 0;
-    }
 
-    public void resetDirBooleans() {
-        isLeft = false;
-        isRight = false;
-    }
-
-    public boolean isLeft() {
-        return isLeft;
-    }
-
-    public void setLeft(boolean left) {
-        this.isLeft = left;
-    }
-
-    public boolean isRight() {
-        return isRight;
-    }
-
-    public void setRight(boolean right) {
-        this.isRight = right;
-    }
-
-    public void setJump(boolean jump) {
-        this.isJump = jump;
-    }
-
-    public void setCurrentLevel(main.model.Levels.Level level) {
-        this.currentLevel = level;
+    private BufferedImage[][] loadAnimations() {
+        BufferedImage img = LoadSave.getSpriteAtlas(LoadSave.PLAYER_ATLAS);
+        //Storleken på spritesheet
+        BufferedImage[][] animations = new BufferedImage[4][8];
+        for (int j = 0; j < animations.length; j++) {
+            for (int i = 0; i < animations[j].length; i++) {
+                //sprite size
+                animations[j][i] = img.getSubimage(i * 32, j * 32, 32, 32);
+            }
+        }
+        return animations;
     }
 
     public void loadLvlData(int[][] lvlData) {
-        this.lvlData = lvlData;
-        if (!isEntityOnFloor(hitbox, lvlData)) {
-            inAir = true;
-        }
+        model.setLvlData(lvlData);
+        // Check if player should be in air based on level data
+        // This logic is now handled in the controller
     }
 
     public void setSpawnPoint(float x, float y) {
-        this.spawnX = x;
-        this.spawnY = y;
+        model.setSpawnX(x);
+        model.setSpawnY(y);
     }
 
     public void spawnAtLevelStart() {
-        hitbox.x = spawnX;
-        hitbox.y = spawnY;
-        resetDirBooleans();
-        airSpeed = 0;
-        isMoving = false;
-        isJump = false;
-        isDead = false;
-        reachedLevelEnd = false;
-        inAir = !isEntityOnFloor(hitbox, lvlData);
+        model.setHitboxPosition(model.getSpawnX(), model.getSpawnY());
+        // Reset state - handled by controller
     }
 
-    //Rendering---------------------------------------
-    //TODO?? move to GameView: MVC
-
-    public void render(Graphics g) {
-        g.drawImage(animation[playerAction][aniIndex],
-                (int) (hitbox.x - xDrawOffset),
-                (int) (hitbox.y - yDrawOffset), width, height, null);
+    public int getDeathCount() {
+        return controller.getDeathCount();
     }
 
-    private void loadAnimatons() {
-        BufferedImage img = LoadSave.getSpriteAtlas(LoadSave.PLAYER_ATLAS);
-        animation = new BufferedImage[4][8];
-        for (int j = 0; j < animation.length; j++) {
-            for (int i = 0; i < animation[j].length; i++) {
-                animation[j][i] = img.getSubimage(i * 32, j * 32, 32, 32);
-            }
-        }
+    public void resetDeathCount() {
+        controller.resetDeathCount();
     }
 
-    private void setAnimation() {
-        int startAni = playerAction;
-
-        if (isMoving) {
-            if (isLeft) {
-                playerAction = RUNNING_LEFT;
-                facingRight = false;
-            } else if (isRight) {
-                facingRight = true;
-                playerAction = RUNNING_RIGHT;
-            }
-        } else {
-            if (!facingRight) {
-                playerAction = IDLE_LEFT;
-            } else {
-                playerAction = IDLE_RIGHT;
-            }
-        }
-
-        if (isJump) {
-            if (!facingRight) {
-                playerAction = JUMPING_LEFT;
-            } else {
-                playerAction = JUMPING_RIGHT;
-            }
-        }
-
-        if (startAni != playerAction) {
-            resetAniTick();
-        }
+    @Override
+    public Rectangle2D.Float getHitbox() {
+        return model.getHitbox();
     }
 
-    private void resetAniTick() {
-        aniTick = 0;
-        aniIndex = 0;
+    public void resetDirBooleans() {
+        model.setLeft(false);
+        model.setRight(false);
     }
 
-    private void updateAnimationTick() {
-        aniTick++;
-        if (aniTick >= aniSpeed) {
-            aniTick = 0;
-            aniIndex++;
-            if (aniIndex >= getSpriteAmount(playerAction)) {
-                aniIndex = 0;
-            }
-        }
+    public boolean isLeft() {
+        return model.isLeft();
+    }
+
+    public void setLeft(boolean left) {
+        model.setLeft(left);
+    }
+
+    public boolean isRight() {
+        return model.isRight();
+    }
+
+    public void setRight(boolean right) {
+        model.setRight(right);
+    }
+
+    public void setJump(boolean jump) {
+        model.setJump(jump);
+    }
+
+    public void setCurrentLevel(Levels.Level level) {
+        this.currentLevel = level;
+        controller.setCurrentLevel(level);
     }
 }
