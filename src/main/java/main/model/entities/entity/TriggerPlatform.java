@@ -14,7 +14,7 @@ public class TriggerPlatform extends Entity {
     //sprite hitbox object to avoid creating garbage
     private final java.awt.geom.Rectangle2D.Float cachedSpriteHitbox = new java.awt.geom.Rectangle2D.Float();
 
-    //Audio controller for playing sounds
+    //Audio controller
     private AudioController audioController;
 
     public TriggerPlatform(float x, float y, float targetX, float targetY,
@@ -30,13 +30,25 @@ public class TriggerPlatform extends Entity {
         );
     }
 
-    // Set the offset of the first tile sprite within the bounding box
+    private static final class Destination {
+        final float x;
+        final float y;
+        final boolean toTarget;
+
+        Destination(float x, float y, boolean toTarget) {
+            this.x = x;
+            this.y = y;
+            this.toTarget = toTarget;
+        }
+    }
+
+    //offset of the first tile sprite within the box
     public void setFirstTileOffset(float offsetX, float offsetY) {
         model.setFirstTileOffsetX(offsetX);
         model.setFirstTileOffsetY(offsetY);
     }
 
-    // Add a tile to this platform (position relative to bounding box top-left)
+    //add tile to this platform ,position is the bounding box: TOP LEFT
     public void addTile(float relX, float relY, BufferedImage tileSprite) {
         model.addTile(relX, relY, tileSprite);
     }
@@ -45,96 +57,84 @@ public class TriggerPlatform extends Entity {
         model.setLoop(loop);
     }
 
-    public void update() {
-        // If looping, start immediately without trigger
+    private void triggerImmediatelyIfLooping() {
         if (model.isLoop() && !model.isTriggered()) {
             model.setTriggered(true);
         }
+    }
 
-        if (!model.isTriggered() || model.isReachedTarget()) {
-            return;
+    private boolean shouldMove() {
+        return model.isTriggered() && !model.isReachedTarget();
+    }
+
+    private boolean handleWaiting() {
+        if (!model.isWaitingAtTarget()) {
+            return false;
         }
 
-        // If waiting at target, check if wait is over
-        if (model.isWaitingAtTarget()) {
-            if (System.currentTimeMillis() - model.getWaitStartTime() >= model.getWaitDurationMs()) {
-                model.setWaitingAtTarget(false);
-                model.setMovingToTarget(!model.isMovingToTarget());
-            }
-            return;
+        long now = System.currentTimeMillis();
+        long waitedMs = now - model.getWaitStartTime();
+        if (waitedMs >= model.getWaitDurationMs()) {
+            model.setWaitingAtTarget(false);
+            model.setMovingToTarget(!model.isMovingToTarget());
         }
+        return true;
+    }
 
-        // Determine current destination
-        float destX = model.isMovingToTarget() ? model.getTargetX() : model.getStartX();
-        float destY = model.isMovingToTarget() ? model.getTargetY() : model.getStartY();
+    private Destination getCurrentDestination() {
+        boolean toTarget = model.isMovingToTarget();
+        float x = toTarget ? model.getTargetX() : model.getStartX();
+        float y = toTarget ? model.getTargetY() : model.getStartY();
+        return new Destination(x, y, toTarget);
+    }
 
+    private void moveOrArrive(float destX, float destY) {
         float dirX = destX - hitbox.x;
         float dirY = destY - hitbox.y;
         float distance = (float) Math.sqrt(dirX * dirX + dirY * dirY);
 
         float speed = model.getSpeed();
-        if (distance < speed) {
-            // Reached destination
-            hitbox.x = destX;
-            hitbox.y = destY;
-
-            if (model.isLoop()) {
-                // If looping, wait then reverse direction
-                model.setWaitingAtTarget(true);
-                model.setWaitStartTime(System.currentTimeMillis());
-            } else if (model.isMovingToTarget() && model.isShouldReturn()) {
-                // Start waiting at target
-                model.setWaitingAtTarget(true);
-                model.setWaitStartTime(System.currentTimeMillis());
-                model.setMovingToTarget(false); // Next move is returning
-            } else {
-                // Done moving
-                if (!model.isMovingToTarget() && model.isShouldReturn()) {
-                    // Returned to start, stop
-                    model.setReachedTarget(true);
-                } else if (model.isMovingToTarget() && !model.isShouldReturn()) {
-                    // Reached target, no return
-                    model.setReachedTarget(true);
-                }
-            }
-        } else {
-            // Move towards destination
-            hitbox.x += (dirX / distance) * speed;
-            hitbox.y += (dirY / distance) * speed;
+        if (distance >= speed) {
+            stepTowards(dirX, dirY, distance, speed);
+            return;
         }
+
+        snapTo(destX, destY);
+        onArrived();
     }
 
-    public void render(Graphics g) {
-        int tileSize = Game.TILES_SIZE;
+    private void stepTowards(float dirX, float dirY, float distance, float speed) {
+        hitbox.x += (dirX / distance) * speed;
+        hitbox.y += (dirY / distance) * speed;
+    }
 
-        // Sprite area is centered in the hitbox (hitbox is 1.5x the sprite area)
-        float spriteAreaX = hitbox.x + hitbox.width / 6f;
-        float spriteAreaY = hitbox.y + hitbox.height / 6f;
+    private void snapTo(float x, float y) {
+        hitbox.x = x;
+        hitbox.y = y;
+    }
 
-        // Draw first tile sprite at its offset within the sprite area
-        int firstX = (int) (spriteAreaX + model.getFirstTileOffsetX());
-        int firstY = (int) (spriteAreaY + model.getFirstTileOffsetY());
+    private void onArrived() {
+        boolean loop = model.isLoop();
+        boolean toTarget = model.isMovingToTarget();
+        boolean shouldReturn = model.isShouldReturn();
 
-        if (model.getSprite() != null) {
-            g.drawImage(model.getSprite(), firstX, firstY, tileSize, tileSize, null);
-        } else {
-            g.setColor(java.awt.Color.ORANGE);
-            g.fillRect(firstX, firstY, tileSize, tileSize);
+        if (loop) {
+            startWait();
+            return;
         }
 
-        // Draw additional tiles relative to sprite area top-left
-        for (int i = 0; i < model.getTilePositions().size(); i++) {
-            float[] pos = model.getTilePositions().get(i);
-            int tileX = (int) (spriteAreaX + pos[0]);
-            int tileY = (int) (spriteAreaY + pos[1]);
-            BufferedImage tileSprite = model.getTileSprites().get(i);
-            if (tileSprite != null) {
-                g.drawImage(tileSprite, tileX, tileY, tileSize, tileSize, null);
-            }
+        if (toTarget && shouldReturn) {
+            startWait();
+            model.setMovingToTarget(false);
+            return;
         }
-        // Uncomment to debug hitbox:
-        //g.setColor(java.awt.Color.RED);
-        //g.drawRect((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height);
+
+        model.setReachedTarget(true);
+    }
+
+    private void startWait() {
+        model.setWaitingAtTarget(true);
+        model.setWaitStartTime(System.currentTimeMillis());
     }
 
     // Check if player is touching this platform
@@ -153,10 +153,6 @@ public class TriggerPlatform extends Entity {
 
     public boolean isTriggered() {
         return model.isTriggered();
-    }
-
-    public boolean hasReachedTarget() {
-        return model.isReachedTarget();
     }
 
     public void reset() {
@@ -213,6 +209,54 @@ public class TriggerPlatform extends Entity {
 
         cachedSpriteHitbox.setRect(spriteAreaX, spriteAreaY, spriteAreaW, spriteAreaH);
         return cachedSpriteHitbox;
+    }
+
+    public void update() {
+        triggerImmediatelyIfLooping();
+
+        if (!shouldMove()) {
+            return;
+        }
+
+        if (handleWaiting()) {
+            return;
+        }
+
+        Destination dest = getCurrentDestination();
+        moveOrArrive(dest.x, dest.y);
+    }
+
+    public void render(Graphics g) {
+        int tileSize = Game.TILES_SIZE;
+
+        // Sprite area is centered in the hitbox (hitbox is 1.5x the sprite area)
+        float spriteAreaX = hitbox.x + hitbox.width / 6f;
+        float spriteAreaY = hitbox.y + hitbox.height / 6f;
+
+        // Draw first tile sprite at its offset within the sprite area
+        int firstX = (int) (spriteAreaX + model.getFirstTileOffsetX());
+        int firstY = (int) (spriteAreaY + model.getFirstTileOffsetY());
+
+        if (model.getSprite() != null) {
+            g.drawImage(model.getSprite(), firstX, firstY, tileSize, tileSize, null);
+        } else {
+            g.setColor(java.awt.Color.ORANGE);
+            g.fillRect(firstX, firstY, tileSize, tileSize);
+        }
+
+        // Draw additional tiles relative to sprite area top-left
+        for (int i = 0; i < model.getTilePositions().size(); i++) {
+            float[] pos = model.getTilePositions().get(i);
+            int tileX = (int) (spriteAreaX + pos[0]);
+            int tileY = (int) (spriteAreaY + pos[1]);
+            BufferedImage tileSprite = model.getTileSprites().get(i);
+            if (tileSprite != null) {
+                g.drawImage(tileSprite, tileX, tileY, tileSize, tileSize, null);
+            }
+        }
+        // Uncomment to debug hitbox:
+        //g.setColor(java.awt.Color.RED);
+        //g.drawRect((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height);
     }
 }
 
