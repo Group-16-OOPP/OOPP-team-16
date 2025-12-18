@@ -30,6 +30,15 @@ public class LevelManager {
         buildAllLevels();
         // Level 1 is always unlocked
         completedLevels.add(0);
+
+        completedLevels.add(1);
+        completedLevels.add(2);
+        completedLevels.add(3);
+        completedLevels.add(4);
+        completedLevels.add(5);
+        completedLevels.add(6);
+
+
     }
 
     private void buildAllLevels() {
