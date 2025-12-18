@@ -130,6 +130,9 @@ public class TriggerPlatform extends Entity {
         }
 
         model.setReachedTarget(true);
+
+        //if (!shouldReturn || !toTarget) {
+        //    model.setReachedTarget(true);
     }
 
     private void startWait() {
