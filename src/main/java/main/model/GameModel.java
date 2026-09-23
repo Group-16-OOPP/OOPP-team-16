@@ -3,31 +3,36 @@ package main.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import main.model.Levels.LevelManager;
 import main.model.entities.Player;
+import main.model.levels.Level;
+import main.model.levels.LevelManager;
 import main.model.observerEvents.GameObserver;
 import utilities.LoadSave;
 
 public class GameModel {
+
     private static final float TRANSITION_SPEED = 0.015f;
 
     private final Player player;
     private final LevelManager levelManager;
 
-    // Observer List
+    // Observer list
     private final List<GameObserver> observers = new ArrayList<>();
 
     // Controller-independent playing flag
     private boolean isActive = false;
 
-    // Transition State
+    // Transition state
     private boolean inTransition = false;
     private float transitionScale = 0f;
     private boolean scalingUp = true;
     private boolean isLevelLoaded = false;
 
-    // Logic Flags
+    // Logic flags
     private boolean wasPlayerDead = false;
+    private boolean isDead = false;
+    private boolean isRespawn = false;
+    private boolean isEndOfLevel = false;
 
     // Stats
     private String playerName = "Player1";
@@ -41,7 +46,8 @@ public class GameModel {
         this.levelManager = levelManager;
     }
 
-    //Observer ---------------
+    // Observer -----------------------------------
+
     public void addObserver(GameObserver observer) {
         if (!observers.contains(observer)) {
             observers.add(observer);
@@ -78,7 +84,8 @@ public class GameModel {
         }
     }
 
-    //Update Loop---------------------------
+    // Update loop --------------------------------
+
     public void update() {
         if (inTransition) {
             updateTransition();
@@ -101,12 +108,12 @@ public class GameModel {
         boolean isPlayerDead = player.getHitbox().x > 1500;
 
         if (!wasPlayerDead && isPlayerDead) {
-            // Player just died
             totalDeaths++;
             notifyPlayerDied();
         } else if (wasPlayerDead && !isPlayerDead) {
             notifyPlayerRespawn();
         }
+
         wasPlayerDead = isPlayerDead;
 
         if (player.hasReachedLevelEnd()) {
@@ -119,10 +126,11 @@ public class GameModel {
     private void updateTransition() {
         if (scalingUp) {
             transitionScale += TRANSITION_SPEED;
+
             if (transitionScale >= 2f) {
                 transitionScale = 2f;
+
                 if (!isLevelLoaded) {
-                    // Logic for swapping levels
                     levelManager.setLevelScore(player.getDeathCount());
                     player.resetDeathCount();
                     levelManager.loadNextLevel();
@@ -131,10 +139,12 @@ public class GameModel {
                     isLevelLoaded = true;
                     notifyLevelLoadRequested();
                 }
+
                 scalingUp = false;
             }
         } else {
             transitionScale -= TRANSITION_SPEED;
+
             if (transitionScale <= 0f) {
                 transitionScale = 0f;
                 inTransition = false;
@@ -142,6 +152,8 @@ public class GameModel {
             }
         }
     }
+
+    // Transition ---------------------------------
 
     public void startLevelTransition() {
         inTransition = true;
@@ -157,6 +169,8 @@ public class GameModel {
         transitionScale = 0f;
     }
 
+    // Statistics ---------------------------------
+
     public void resetStats() {
         totalDeaths = 0;
         startTime = 0L;
@@ -166,6 +180,12 @@ public class GameModel {
         totalDeaths = 0;
         startTime = System.nanoTime();
     }
+
+    public void incrementTotalDeathsForRun() {
+        totalDeaths++;
+    }
+
+    // Game state ---------------------------------
 
     public void togglePause() {
         if (isActive && !inTransition) {
@@ -194,24 +214,71 @@ public class GameModel {
     }
 
     private void reloadPlayerForCurrentLevel() {
-        main.model.Levels.Level currentLevel = levelManager.getCurrentLvl();
-        player.setSpawnPoint(currentLevel.getSpawnX(), currentLevel.getSpawnY());
+        Level currentLevel = levelManager.getCurrentLvl();
+
+        player.setSpawnPoint(
+                currentLevel.getSpawnX(),
+                currentLevel.getSpawnY());
+
         player.loadLvlData(currentLevel.getLevelData());
         player.setCurrentLevel(currentLevel);
         player.spawnAtLevelStart();
+
         currentLevel.resetPlatforms();
         currentLevel.clearDeathPositions();
     }
 
-    // Scoring -----------------------------------
+    // Scoring ------------------------------------
+
     public void recordLevelCompletion() {
         long runEndTimeNanos = System.nanoTime();
-        double timeSeconds = (runEndTimeNanos - startTime) / 1_000_000_000.0;
+
+        double timeSeconds =
+                (runEndTimeNanos - startTime) / 1_000_000_000.0;
+
         int levelIndex = levelManager.getCurrentLevelIndex();
-        LoadSave.appendToScoreFile(playerName, levelIndex, timeSeconds, totalDeaths);
+
+        LoadSave.appendToScoreFile(
+                playerName,
+                levelIndex,
+                timeSeconds,
+                totalDeaths);
     }
 
-    //Getters & Setters ---
+    // Edge flags ---------------------------------
+
+    public void resetEdgeFlags() {
+        isDead = false;
+        isRespawn = false;
+        isEndOfLevel = false;
+    }
+
+    public boolean checkIsDead() {
+        return isDead;
+    }
+
+    public void setDead(boolean dead) {
+        isDead = dead;
+    }
+
+    public boolean checkIsRespawn() {
+        return isRespawn;
+    }
+
+    public void setRespawn(boolean respawn) {
+        isRespawn = respawn;
+    }
+
+    public boolean checkIsEndOfLevel() {
+        return isEndOfLevel;
+    }
+
+    public void setEndOfLevel(boolean endOfLevel) {
+        isEndOfLevel = endOfLevel;
+    }
+
+    // Getters and setters ------------------------
+
     public Player getPlayer() {
         return player;
     }
@@ -228,8 +295,52 @@ public class GameModel {
         return inTransition;
     }
 
+    public void setInTransition(boolean inTransition) {
+        this.inTransition = inTransition;
+    }
+
     public float getTransitionScale() {
         return transitionScale;
+    }
+
+    public void setTransitionScale(float transitionScale) {
+        this.transitionScale = transitionScale;
+    }
+
+    public boolean isScalingUp() {
+        return scalingUp;
+    }
+
+    public void setScalingUp(boolean scalingUp) {
+        this.scalingUp = scalingUp;
+    }
+
+    public boolean isLevelLoaded() {
+        return isLevelLoaded;
+    }
+
+    public void setLevelLoaded(boolean levelLoaded) {
+        isLevelLoaded = levelLoaded;
+    }
+
+    public float getTransitionSpeed() {
+        return TRANSITION_SPEED;
+    }
+
+    public boolean wasPlayerDead() {
+        return wasPlayerDead;
+    }
+
+    public void setWasPlayerDead(boolean wasPlayerDead) {
+        this.wasPlayerDead = wasPlayerDead;
+    }
+
+    public long getRunStartTimeNanos() {
+        return startTime;
+    }
+
+    public int getTotalDeathsForRun() {
+        return totalDeaths;
     }
 
     public String getPlayerName() {
@@ -245,4 +356,5 @@ public class GameModel {
     public void setGameActive(boolean isPlaying) {
         this.isActive = isPlaying;
     }
+
 }

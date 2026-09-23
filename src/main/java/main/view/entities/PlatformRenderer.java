@@ -2,7 +2,7 @@ package main.view.entities;
 
 import java.awt.Graphics;
 
-import main.Game;
+import main.controller.Game;
 import main.model.entities.PlatformModel;
 
 /**

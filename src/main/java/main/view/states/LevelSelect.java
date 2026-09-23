@@ -8,8 +8,8 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-import main.model.Levels.LevelManager;
 import main.controller.Game;
+import main.model.levels.LevelManager;
 import utilities.LoadSave;
 
 public class LevelSelect {

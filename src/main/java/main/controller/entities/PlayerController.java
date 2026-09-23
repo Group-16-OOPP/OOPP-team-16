@@ -2,23 +2,25 @@ package main.controller.entities;
 
 import java.awt.image.BufferedImage;
 
-import Levels.Level;
-import entities.Entity;
+import main.model.levels.Level;
+import main.model.entities.Entity;
 import main.model.entities.PlayerModel;
-import main.observerEvents.PlayerEventListener;
-import static utilz.Constants.PlayerConstants.IDLE_LEFT;
-import static utilz.Constants.PlayerConstants.IDLE_RIGHT;
-import static utilz.Constants.PlayerConstants.JUMPING_LEFT;
-import static utilz.Constants.PlayerConstants.JUMPING_RIGHT;
-import static utilz.Constants.PlayerConstants.RUNNING_LEFT;
-import static utilz.Constants.PlayerConstants.RUNNING_RIGHT;
-import static utilz.Constants.PlayerConstants.getSpriteAmount;
-import static utilz.HelpMethods.canMoveHere;
-import static utilz.HelpMethods.getEntityXPosNextToWall;
-import static utilz.HelpMethods.getEntityYPosUnderOrAbove;
-import static utilz.HelpMethods.isEntityDead;
-import static utilz.HelpMethods.isEntityOnFloor;
-import static utilz.HelpMethods.isOnLevelEnd;
+import main.model.observerEvents.PlayerEventListener;
+import utilities.LoadSave;
+
+import static utilities.Constants.PlayerConstants.IDLE_LEFT;
+import static utilities.Constants.PlayerConstants.IDLE_RIGHT;
+import static utilities.Constants.PlayerConstants.JUMPING_LEFT;
+import static utilities.Constants.PlayerConstants.JUMPING_RIGHT;
+import static utilities.Constants.PlayerConstants.RUNNING_LEFT;
+import static utilities.Constants.PlayerConstants.RUNNING_RIGHT;
+import static utilities.Constants.PlayerConstants.getSpriteAmount;
+import static utilities.HelpMethods.canMoveHere;
+import static utilities.HelpMethods.getEntityXPosNextToWall;
+import static utilities.HelpMethods.getEntityYPosUnderOrAbove;
+import static utilities.HelpMethods.isEntityDead;
+import static utilities.HelpMethods.isEntityOnFloor;
+import static utilities.HelpMethods.isOnLevelEnd;
 
 public class PlayerController {
 
@@ -87,7 +89,7 @@ public class PlayerController {
 
         // Record death position before moving player off screen
         if (currentLevel != null) {
-            BufferedImage deathSprite = utilz.LoadSave.getSpriteAtlas(utilz.LoadSave.PLAYER_DEAD);
+            BufferedImage deathSprite = LoadSave.getSpriteAtlas(LoadSave.PLAYER_DEAD);
             currentLevel.recordDeathPosition(model.getHitbox().x - model.getXDrawOffset(),
                                            model.getHitbox().y - model.getYDrawOffset(), deathSprite);
         }

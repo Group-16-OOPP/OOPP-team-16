@@ -1,16 +1,15 @@
-package entities;
+package main.model.entities;
 
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
-import main.Game;
+import main.controller.Game;
 import main.controller.entities.PlayerController;
-import main.model.entities.PlayerModel;
-import main.observerEvents.PlayerEventListener;
+import main.model.levels.Level;
+import main.model.observerEvents.PlayerEventListener;
 import main.view.entities.PlayerRenderer;
-
-import utilz.LoadSave;
+import utilities.LoadSave;
 
 public class Player extends Entity {
     // MVC Architecture Components
@@ -19,7 +18,7 @@ public class Player extends Entity {
     private PlayerRenderer renderer;
 
     // Legacy support - keep minimal fields for backward compatibility
-    private Levels.Level currentLevel;
+    private Level currentLevel;
 
     public Player(float x, float y, int width, int height) {
         super(x, y, width, height);
@@ -123,7 +122,7 @@ public class Player extends Entity {
         model.setJump(jump);
     }
 
-    public void setCurrentLevel(Levels.Level level) {
+    public void setCurrentLevel(Level level) {
         this.currentLevel = level;
         controller.setCurrentLevel(level);
     }

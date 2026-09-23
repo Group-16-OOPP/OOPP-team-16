@@ -1,4 +1,4 @@
-package main.model.Levels;
+package main.model.levels;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;

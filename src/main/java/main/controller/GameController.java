@@ -1,7 +1,7 @@
 package main.controller;
 
-import Levels.LevelManager;
-import entities.Player;
+import main.model.levels.LevelManager;
+import main.model.entities.Player;
 import main.model.GameModel;
 
 public class GameController {
