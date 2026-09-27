@@ -13,6 +13,11 @@ public class GamingState extends GameBaseState {
     }
 
     @Override
+    public void update() {
+        game.updateGameState();
+    }
+
+    @Override
     public void render(Graphics g) {
         game.renderGame(g);
     }

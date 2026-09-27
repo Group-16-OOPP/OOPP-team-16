@@ -1,4 +1,4 @@
-package main;
+package main.controller;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -6,25 +6,25 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import Levels.LevelManager;
 import audio.controller.AudioController;
-import entities.Player;
-import main.controller.GameController;
 import main.model.GameModel;
-import main.observerEvents.GameEventListener;
-import main.observerEvents.PlayerEventListener;
-import main.states.GameBaseState;
-import main.states.Leaderboard;
-import main.states.LeaderboardState;
-import main.states.LevelSelect;
-import main.states.LevelSelectState;
-import main.states.MainMenu;
-import main.states.MenuState;
-import main.states.PlayingState;
+import main.model.entities.Player;
+import main.model.levels.Level;
+import main.model.levels.LevelManager;
+import main.model.observerEvents.GameEventListener;
+import main.model.observerEvents.PlayerEventListener;
 import main.view.GamePanel;
 import main.view.GameView;
 import main.view.GameWindow;
-import utilz.LoadSave;
+import main.view.interfaces.GameBaseState;
+import main.view.interfaces.GamingState;
+import main.view.interfaces.LeaderboardState;
+import main.view.interfaces.LevelSelectState;
+import main.view.interfaces.MenuState;
+import main.view.states.Leaderboard;
+import main.view.states.LevelSelect;
+import main.view.states.MainMenu;
+import utilities.LoadSave;
 
 public class Game extends PlayerEventListener implements Runnable {
 
@@ -57,7 +57,7 @@ public class Game extends PlayerEventListener implements Runnable {
     private GameState gameState = GameState.MENU;
 
     private GameBaseState currentState;
-    private PlayingState playingState;
+    private GamingState gamingState;
     private MenuState menuState;
     private LeaderboardState leaderboardState;
     private LevelSelectState levelSelectState;
@@ -91,7 +91,7 @@ public class Game extends PlayerEventListener implements Runnable {
 
         model = new GameModel(player, levelManager);
         controller = new GameController(model, player, levelManager);
-        view = new GameView(model);
+        view = new GameView(model, GAME_WIDTH, GAME_HEIGHT);
 
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
 
@@ -99,7 +99,7 @@ public class Game extends PlayerEventListener implements Runnable {
         levelSelect = new LevelSelect(this, levelManager);
         leaderboard = new Leaderboard(this);
 
-        playingState = new PlayingState(this);
+        gamingState = new GamingState(this);
         menuState = new MenuState(this);
         leaderboardState = new LeaderboardState(this);
         levelSelectState = new LevelSelectState(this);
@@ -108,7 +108,7 @@ public class Game extends PlayerEventListener implements Runnable {
     }
 
     private void loadPlayerForCurrentLevel() {
-        Levels.Level currentLevel = levelManager.getCurrentLvl();
+        Level currentLevel = levelManager.getCurrentLvl();
         player.setSpawnPoint(currentLevel.getSpawnX(), currentLevel.getSpawnY());
         player.loadLvlData(currentLevel.getLevelData());
         player.setCurrentLevel(currentLevel);
@@ -129,7 +129,6 @@ public class Game extends PlayerEventListener implements Runnable {
         currentState.update();
     }
 
-    @Override
     public void update(String eventType, File file) {
 
     }
@@ -246,10 +245,8 @@ public class Game extends PlayerEventListener implements Runnable {
         GameState oldState = this.gameState;
         this.gameState = newState;
 
-        model.setGameState(newState);
-
         GameBaseState previousState = currentState;
-        //TODO Move into playingState: onExit
+        //TODO Move into gamingState: onExit
         if (newState == GameState.MENU) {
             // Reset transition state when returning to menu
             if (model.isInTransition()) {
@@ -257,15 +254,15 @@ public class Game extends PlayerEventListener implements Runnable {
             }
             if (oldState == GameState.PLAYING) {
                 levelManager.resetToFirstLevel();
-                model.resetRunStats();
+                model.resetStats();
                 loadPlayerForCurrentLevel();
             }
         }
 
-        //TODO Move into playingState: onEnter
+        //TODO Move into gamingState: onEnter
         //If we are starting to play from the menu, start a fresh run (timer & deaths), for leaderboard
         if (newState == GameState.PLAYING && oldState == GameState.MENU) {
-            model.startNewRunTimer();
+            model.startNewTimer();
             loadPlayerForCurrentLevel();
         }
 
@@ -277,7 +274,7 @@ public class Game extends PlayerEventListener implements Runnable {
         switch (newState) {
         case MENU -> currentState = menuState;
         case LEVEL_SELECT -> currentState = levelSelectState;
-        case PLAYING -> currentState = playingState;
+        case PLAYING -> currentState = gamingState;
         case LEADERBOARD -> currentState = leaderboardState;
         default -> {
             // needed to satisfy checkstyle

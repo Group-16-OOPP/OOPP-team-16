@@ -2,7 +2,7 @@ package main.model.entities;
 
 import java.awt.geom.Rectangle2D;
 
-import main.Game;
+import main.controller.Game;
 
 public class PlayerModel {
 
@@ -62,7 +62,7 @@ public class PlayerModel {
         this.hitbox = new Rectangle2D.Float(x, y, 12 * Game.SCALE, 22 * Game.SCALE);
         this.spawnX = x;
         this.spawnY = y;
-        this.playerAction = utilz.Constants.PlayerConstants.IDLE_RIGHT;
+        this.playerAction = utilities.Constants.PlayerConstants.IDLE_RIGHT;
     }
 
     // Getters and setters for all state data

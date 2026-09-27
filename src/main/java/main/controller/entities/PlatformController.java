@@ -1,6 +1,6 @@
 package main.controller.entities;
 
-import entities.Entity;
+import main.model.entities.Entity;
 import main.model.entities.PlatformModel;
 
 

@@ -1,4 +1,4 @@
-package entities;
+package main.model.entities;
 
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
@@ -6,7 +6,6 @@ import java.awt.image.BufferedImage;
 
 import audio.controller.AudioController;
 import main.controller.entities.PlatformController;
-import main.model.entities.PlatformModel;
 import main.view.entities.PlatformRenderer;
 
 public class TriggerPlatform extends Entity {
