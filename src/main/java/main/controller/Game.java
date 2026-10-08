@@ -26,7 +26,7 @@ import main.view.states.LevelSelect;
 import main.view.states.MainMenu;
 import utilities.LoadSave;
 
-public class Game extends PlayerEventListener implements Runnable {
+public class Game extends PlayerEventListener{
 
     public static final int TILES_DEAFULT_SIZE = 32;
     public static final float SCALE = 1.0f;
@@ -36,15 +36,14 @@ public class Game extends PlayerEventListener implements Runnable {
     public static final int GAME_WIDTH = TILES_SIZE * TILES_IN_WIDTH;
     public static final int GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
 
+    private GameLoopManager gameLoopManager;
+
     public MainMenu mainMenu;
     public Leaderboard leaderboard;
     public LevelSelect levelSelect;
 
     private GamePanel gamePanel;
     private GameWindow gameWindow;
-    private Thread gametThread;
-    private final int FPS_SET = 120;
-    private final int UPS_SET = 200;
 
     private Player player;
     private LevelManager levelManager;
@@ -80,7 +79,9 @@ public class Game extends PlayerEventListener implements Runnable {
         gameWindow = new GameWindow(gamePanel);
         gamePanel.requestFocus();
 
-        startGameLoop();
+        gameLoopManager = new GameLoopManager(this::update, gamePanel::repaint);
+
+        gameLoopManager.startGameLoop();
     }
 
     private void initClasses() {
@@ -167,51 +168,6 @@ public class Game extends PlayerEventListener implements Runnable {
     public void renderGame(Graphics g) {
         view.renderGame(g);
     }
-
-    private void startGameLoop() {
-        gametThread = new Thread(this);
-        gametThread.start();
-    }
-
-    @Override
-    public void run() {
-        double timePerFrame = 1000000000.0 / FPS_SET;
-        double timePerUpdate = 1000000000.0 / UPS_SET;
-
-        long previousTime = System.nanoTime();
-
-        int frames = 0;
-        int updates = 0;
-        long lastCheck = System.currentTimeMillis();
-
-        double deltaU = 0;
-        double deltaF = 0;
-
-        while (true) {
-            long currentTime = System.nanoTime();
-
-            deltaU += (currentTime - previousTime) / timePerUpdate;
-            deltaF += (currentTime - previousTime) / timePerFrame;
-            previousTime = currentTime;
-            if (deltaU >= 1) {
-                update();
-                updates++;
-                deltaU--;
-            }
-            if (deltaF >= 1) {
-                gamePanel.repaint();
-                frames++;
-                deltaF--;
-            }
-            if (System.currentTimeMillis() - lastCheck >= 1000) {
-                lastCheck = System.currentTimeMillis();
-                System.out.println("FPS: " + frames + "UPS: " + updates);
-                frames = 0;
-                updates = 0;
-            }
-        }
-    }
-
 
 
     public Player getPlayer() {
