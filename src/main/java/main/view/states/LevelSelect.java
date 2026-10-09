@@ -7,7 +7,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-
+import main.controller.GameStateManager;
 import main.controller.Game;
 import main.model.levels.LevelManager;
 import utilities.LoadSave;
@@ -226,7 +226,7 @@ public class LevelSelect {
     public void mouseReleased(int x, int y) {
         // Check back button release
         if (backButtonBounds.contains(x, y) && backButtonState == ButtonState.CLICK) {
-            game.setGameState(Game.GameState.MENU);
+            game.setGameState(GameStateManager.GameState.MENU);
             backButtonState = ButtonState.NORMAL;
             return;
         }
@@ -243,13 +243,13 @@ public class LevelSelect {
         
         // Set the current level index and start playing
         levelManager.setCurrentLevelIndex(levelIndex);
-        game.setGameState(Game.GameState.PLAYING);
+        game.setGameState(GameStateManager.GameState.PLAYING);
     }
 
     public void mouseClicked(int x, int y) {
         // Back button click
         if (backButtonBounds.contains(x, y)) {
-            game.setGameState(Game.GameState.MENU);
+            game.setGameState(GameStateManager.GameState.MENU);
             return;
         }
 

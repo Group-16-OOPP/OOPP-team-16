@@ -1,7 +1,6 @@
 package main.controller.inputs.commands;
-
+import main.controller.GameStateManager;
 import main.controller.Game;
-import main.controller.Game.GameState;
 
 public class GoToMenuCommand implements Command {
 
@@ -13,7 +12,7 @@ public class GoToMenuCommand implements Command {
 
     @Override
     public void execute() {
-        game.setGameState(GameState.MENU);
+        game.setGameState(GameStateManager.GameState.MENU);
     }
 }
 
