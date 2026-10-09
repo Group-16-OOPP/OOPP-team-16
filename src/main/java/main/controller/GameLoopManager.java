@@ -1,9 +1,10 @@
 package main.controller;
 
 public final class GameLoopManager implements Runnable {
-    private Thread gameThread;
+    
     private static final int FPS_SET = 120;
     private static final int UPS_SET = 200;
+    private Thread gameThread;
 
     private final Runnable updateAction;
     private final Runnable repaintAction;

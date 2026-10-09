@@ -36,12 +36,13 @@ public class Game extends PlayerEventListener{
     public static final int GAME_WIDTH = TILES_SIZE * TILES_IN_WIDTH;
     public static final int GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
 
-    private GameLoopManager gameLoopManager;
+    
 
     public MainMenu mainMenu;
     public Leaderboard leaderboard;
     public LevelSelect levelSelect;
-
+    
+    private GameLoopManager gameLoopManager;
     private GamePanel gamePanel;
     private GameWindow gameWindow;
 
