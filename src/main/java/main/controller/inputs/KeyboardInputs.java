@@ -4,7 +4,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Map;
-
+import main.controller.GameStateManager;
 import main.controller.inputs.commands.Command;
 import main.controller.inputs.commands.GoToMenuCommand;
 import main.controller.inputs.commands.JumpPressCommand;
@@ -69,7 +69,7 @@ public class KeyboardInputs implements KeyListener {
     }
 
     private boolean isEditingName() {
-        return game.getGameState() == Game.GameState.MENU &&
+        return game.getGameState() == GameStateManager.GameState.MENU &&
                game.mainMenu != null &&
                game.mainMenu.isEditingName();
     }
@@ -101,7 +101,7 @@ public class KeyboardInputs implements KeyListener {
         int keyCode = e.getKeyCode();
 
         // LEFT/RIGHT navigation for leaderboarding...
-        if (game.getGameState() == Game.GameState.LEADERBOARD) {
+        if (game.getGameState() == GameStateManager.GameState.LEADERBOARD) {
             if (keyCode == KeyEvent.VK_LEFT) {
                 game.leaderboard.previousLevel();
                 return;

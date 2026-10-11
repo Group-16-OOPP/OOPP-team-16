@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
+import main.controller.GameStateManager;
 import main.controller.Game;
 import static main.controller.Game.GAME_HEIGHT;
 import static main.controller.Game.GAME_WIDTH;
@@ -196,7 +196,7 @@ public class LevelManager {
         } else {
             // Last level completed - return to main menu
             if (game != null) {
-                game.setGameState(Game.GameState.MENU);
+                game.setGameState(GameStateManager.GameState.MENU);
             }
         }
     }

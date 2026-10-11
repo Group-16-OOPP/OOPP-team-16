@@ -7,7 +7,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-
+import main.controller.GameStateManager;
 import main.controller.Game;
 
 public class MainMenu {
@@ -236,16 +236,16 @@ public class MainMenu {
     private void handleSelection(int choice) {
         switch (choice) {
         case 0:
-            game.setGameState(Game.GameState.PLAYING);
+            game.setGameState(GameStateManager.GameState.PLAYING);
             break;
         case 1: // Change Name
             startEditingName();
             break;
         case 2: // Select Level
-            game.setGameState(Game.GameState.LEVEL_SELECT);
+            game.setGameState(GameStateManager.GameState.LEVEL_SELECT);
             break;
         case 3: // Leaderboard
-            game.setGameState(Game.GameState.LEADERBOARD);
+            game.setGameState(GameStateManager.GameState.LEADERBOARD);
             break;
         case 4: // Quit
             System.exit(0);
