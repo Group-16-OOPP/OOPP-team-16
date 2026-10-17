@@ -16,10 +16,6 @@ import main.model.observerEvents.PlayerEventListener;
 import main.view.GamePanel;
 import main.view.GameView;
 import main.view.GameWindow;
-import main.view.interfaces.GamingState;
-import main.view.interfaces.LeaderboardState;
-import main.view.interfaces.LevelSelectState;
-import main.view.interfaces.MenuState;
 import main.view.states.Leaderboard;
 import main.view.states.LevelSelect;
 import main.view.states.MainMenu;
@@ -60,7 +56,6 @@ public class Game extends PlayerEventListener {
     public Game() {
         audioController = AudioController.getInstance();
         initClasses();
-
         gamePanel = new GamePanel(this);
         gameWindow = new GameWindow(gamePanel);
         gamePanel.requestFocus();
@@ -71,30 +66,20 @@ public class Game extends PlayerEventListener {
     }
 
     private void initClasses() {
-        levelManager = new LevelManager(this);
-        player       = new Player(200, 550, (int) (32 * SCALE), (int) (32 * SCALE));
-        
-        
-        player.setPlayerEventListener(this);
+        GameInitializer init = new GameInitializer(this);
+        levelManager = init.getLevelManager();
+        player = init.getPlayer();
+        model = init.getModel();
+        controller = init.getController();
+        view = init.getView();
+        transitionImage = init.getTransitionImage();
+        mainMenu = init.getMainMenu();
+        levelSelect = init.getLevelSelect();
+        leaderboard = init.getLeaderboard();
+        gameStateManager = init.getGameStateManager();
+
         loadPlayerForCurrentLevel();
-
-        model = new GameModel(player, levelManager);
-        controller = new GameController(model, player, levelManager);
-        view = new GameView(model, GAME_WIDTH, GAME_HEIGHT);
-
-        transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
-
-        mainMenu = new MainMenu(this);
-        levelSelect = new LevelSelect(this, levelManager);
-        leaderboard = new Leaderboard(this);
-
-        GamingState gamingState = new GamingState(this);
-        MenuState menuState = new MenuState(this);
-        LeaderboardState leaderboardState = new LeaderboardState(this);
-        LevelSelectState levelSelectState = new LevelSelectState(this);
-        
-        gameStateManager = new GameStateManager(gamingState, menuState, leaderboardState, levelSelectState);
-    }
+    }   
 
     private void loadPlayerForCurrentLevel() {
         Level currentLevel = levelManager.getCurrentLvl();
