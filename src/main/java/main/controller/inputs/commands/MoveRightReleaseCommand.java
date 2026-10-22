@@ -1,17 +1,17 @@
 package main.controller.inputs.commands;
 
-import main.controller.Game;
+import main.model.entities.Player;
 
 public class MoveRightReleaseCommand implements Command {
 
-    private final Game game;
+    private final Player player;
 
-    public MoveRightReleaseCommand(Game game) {
-        this.game = game;
+    public MoveRightReleaseCommand(Player player) {
+        this.player = player;
     }
 
     @Override
     public void execute() {
-        game.getPlayer().setRight(false);
+        player.setRight(false);
     }
 }

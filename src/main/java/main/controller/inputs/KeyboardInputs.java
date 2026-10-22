@@ -4,6 +4,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Map;
+
+import audio.controller.AudioController;
+import main.controller.Game;
 import main.controller.GameStateManager;
 import main.controller.inputs.commands.Command;
 import main.controller.inputs.commands.GoToMenuCommand;
@@ -14,35 +17,44 @@ import main.controller.inputs.commands.MoveLeftReleaseCommand;
 import main.controller.inputs.commands.MoveRightPressCommand;
 import main.controller.inputs.commands.MoveRightReleaseCommand;
 import main.controller.inputs.commands.TogglePauseCommand;
-import main.controller.Game;
+import main.model.GameModel;
+import main.model.entities.Player;
 
 public class KeyboardInputs implements KeyListener {
-
-    private final Game game;
+    private final Player player;
+    private final AudioController audioController;
+    private final GameStateManager gameStateManager;
+    private final GameModel model;
+    private final Game game; /// Game refrence only kept for menu refactor,,,,
     private boolean keyDown = false;
 
     private final Map<Integer, Command> pressedCommands = new HashMap<>();
     private final Map<Integer, Command> releasedCommands = new HashMap<>();
 
-    public KeyboardInputs(Game game) {
+    public KeyboardInputs(Player player, AudioController audioController, 
+        GameModel model, GameStateManager gameStateManager,Game game) {
+        this.audioController = audioController;
+        this.gameStateManager = gameStateManager;
+        this.player = player;
+        this.model = model;
         this.game = game;
         initCommands();
     }
 
     private void initCommands() {
         // movement
-        Command moveLeftPress = new MoveLeftPressCommand(game);
-        Command moveLeftRelease = new MoveLeftReleaseCommand(game);
-        Command moveRightPress = new MoveRightPressCommand(game);
-        Command moveRightRelease = new MoveRightReleaseCommand(game);
+        Command moveLeftPress = new MoveLeftPressCommand(player);
+        Command moveLeftRelease = new MoveLeftReleaseCommand(player);
+        Command moveRightPress = new MoveRightPressCommand(player);
+        Command moveRightRelease = new MoveRightReleaseCommand(player);
 
         // jump
-        Command jumpPress = new JumpPressCommand(game);
-        Command jumpRelease = new JumpReleaseCommand(game);
+        Command jumpPress = new JumpPressCommand(player);
+        Command jumpRelease = new JumpReleaseCommand(player);
 
         // control
-        Command togglePause = new TogglePauseCommand(game);
-        Command goToMenu = new GoToMenuCommand(game);
+        Command togglePause = new TogglePauseCommand(model);
+        Command goToMenu = new GoToMenuCommand(game); // game stays for menu interactions ONLY(for now)
 
         // map keys to commands (press)
         pressedCommands.put(KeyEvent.VK_A, moveLeftPress);
@@ -69,7 +81,8 @@ public class KeyboardInputs implements KeyListener {
     }
 
     private boolean isEditingName() {
-        return game.getGameState() == GameStateManager.GameState.MENU &&
+        return gameStateManager.getGameState() == 
+               GameStateManager.GameState.MENU && // Game stays for Menu interactions ONLY(for now)
                game.mainMenu != null &&
                game.mainMenu.isEditingName();
     }
@@ -114,7 +127,7 @@ public class KeyboardInputs implements KeyListener {
         //TODO, abstract this to the key in the command, or put it into a listener. choices..
         // Play jump sound once per press
         if (isJumpKey(keyCode) && !keyDown) {
-            game.getAudioController().playJump();
+            audioController.playJump();
             keyDown = true;
         }
 

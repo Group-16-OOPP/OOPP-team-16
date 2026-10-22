@@ -1,17 +1,17 @@
 package main.controller.inputs.commands;
 
-import main.controller.Game;
+import main.model.entities.Player;
 
 public class JumpPressCommand implements Command {
 
-    private final Game game;
+    private final Player player;
 
-    public JumpPressCommand(Game game) {
-        this.game = game;
+    public JumpPressCommand(Player player) {
+        this.player = player;
     }
 
     @Override
     public void execute() {
-        game.getPlayer().setJump(true);
+        player.setJump(true);
     }
 }
