@@ -1,18 +1,18 @@
 package main.controller.inputs.commands;
 
-import main.controller.Game;
+import main.model.entities.Player;
 
 public class JumpReleaseCommand implements Command {
 
-    private final Game game;
+    private final Player player;
 
-    public JumpReleaseCommand(Game game) {
-        this.game = game;
+    public JumpReleaseCommand(Player player) {
+        this.player = player;
     }
 
     @Override
     public void execute() {
-        game.getPlayer().setJump(false);
+        player.setJump(false);
     }
 }
 

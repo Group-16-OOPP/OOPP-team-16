@@ -1,18 +1,18 @@
 package main.controller.inputs.commands;
 
-import main.controller.Game;
+import main.model.entities.Player;
 
 public class MoveLeftPressCommand implements Command {
 
-    private final Game game;
+    private final Player player;
 
-    public MoveLeftPressCommand(Game game) {
-        this.game = game;
+    public MoveLeftPressCommand(Player player) {
+        this.player = player;
     }
 
     @Override
     public void execute() {
-        game.getPlayer().setLeft(true);
+        player.setLeft(true);
     }
 }
 
