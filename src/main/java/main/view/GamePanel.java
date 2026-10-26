@@ -5,22 +5,22 @@ import java.awt.Graphics;
 
 import javax.swing.JPanel;
 
-import main.controller.inputs.KeyboardInputs;
-import main.controller.inputs.MouseInputs;
 import main.controller.Game;
 import static main.controller.Game.GAME_HEIGHT;
 import static main.controller.Game.GAME_WIDTH;
+import main.controller.inputs.KeyboardInputs;
+import main.controller.inputs.MouseInputs;
 
 public class GamePanel extends JPanel {
     private MouseInputs mouseInputs;
     private Game game;
 
     public GamePanel(Game game) {
-        mouseInputs = new MouseInputs();
+        mouseInputs = new MouseInputs(game.getGameStateManager(),game);
         this.game = game;
         setPanelSize();
-        addKeyListener(new KeyboardInputs(game));
-        mouseInputs.setGamePanel(this);
+        addKeyListener(new KeyboardInputs(game.getPlayer(),game.getAudioController(),
+            game.getGameModel(),game.getGameStateManager(), game));
         addMouseListener(mouseInputs);
         addMouseMotionListener(mouseInputs);
     }

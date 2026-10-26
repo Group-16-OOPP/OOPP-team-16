@@ -1,46 +1,40 @@
 package main.controller.inputs;
-import main.controller.GameStateManager;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-import main.view.GamePanel;
 import main.controller.Game;
+import main.controller.GameStateManager;
 
 public class MouseInputs implements MouseListener, MouseMotionListener {
 
-    private GamePanel panel;
-
-    public void setGamePanel(GamePanel panel) {
-        this.panel = panel;
+    private final GameStateManager gameStateManager;
+    private final Game game; // only for menu class delegation
+    public MouseInputs(GameStateManager gameStateManager, Game game)
+    {
+        this.gameStateManager = gameStateManager;
+        this.game = game;
     }
-
     @Override
     public void mouseDragged(MouseEvent arg0) {
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (panel == null) {
-            return;
-        }
-        Game game = panel.getGame();
-        if (game.getGameState() == GameStateManager.GameState.MENU) {
+      
+        if (gameStateManager.getGameState() == GameStateManager.GameState.MENU) {
             game.mainMenu.mouseMoved(e.getX(), e.getY());
-        } else if (game.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
+        } else if (gameStateManager.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
             game.levelSelect.mouseMoved(e.getX(), e.getY());
         }
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (panel == null) {
-            return;
-        }
-        Game game = panel.getGame();
-        if (game.getGameState() == GameStateManager.GameState.MENU) {
+     
+        if (gameStateManager.getGameState() == GameStateManager.GameState.MENU) {
             game.mainMenu.mouseClicked(e.getX(), e.getY());
-        } else if (game.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
+        } else if (gameStateManager.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
             game.levelSelect.mouseClicked(e.getX(), e.getY());
         }
     }
@@ -55,26 +49,19 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (panel == null) {
-            return;
-        }
-        Game game = panel.getGame();
-        if (game.getGameState() == GameStateManager.GameState.MENU) {
+        if (gameStateManager.getGameState() == GameStateManager.GameState.MENU) {
             game.mainMenu.mousePressed(e.getX(), e.getY());
-        }else if (game.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
+        }else if (gameStateManager.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
             game.levelSelect.mousePressed(e.getX(), e.getY());
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (panel == null) {
-            return;
-        }
-        Game game = panel.getGame();
-        if (game.getGameState() == GameStateManager.GameState.MENU) {
+       
+        if (gameStateManager.getGameState() == GameStateManager.GameState.MENU) {
             game.mainMenu.mouseReleased(e.getX(), e.getY());
-        } else if (game.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
+        } else if (gameStateManager.getGameState() == GameStateManager.GameState.LEVEL_SELECT) {
             game.levelSelect.mouseReleased(e.getX(), e.getY());
         }
     }

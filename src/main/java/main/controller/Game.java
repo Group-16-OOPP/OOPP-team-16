@@ -159,6 +159,12 @@ public class Game extends PlayerEventListener {
     public AudioController getAudioController() {
         return audioController;
     }
+    public GameStateManager getGameStateManager(){
+        return gameStateManager;
+    }
+    public GameModel getGameModel(){
+        return model;
+    }
 
     //PLAYER NAME METHODS
     public String getPlayerName() {
