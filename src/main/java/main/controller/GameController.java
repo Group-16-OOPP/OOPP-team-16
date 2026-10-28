@@ -3,17 +3,47 @@ package main.controller;
 import main.model.levels.LevelManager;
 import main.model.entities.Player;
 import main.model.GameModel;
+import audio.controller.AudioController;
+import main.model.observerEvents.PlayerEventListener;
 
-public class GameController {
+
+
+public class GameController extends PlayerEventListener {
 
     private final GameModel model;
     private final Player player;
     private final LevelManager levelManager;
+    private final AudioController audioController;
 
-    public GameController(GameModel model, Player player, LevelManager levelManager) {
+    public GameController(GameModel model, Player player, LevelManager levelManager, AudioController audioController) {
         this.model = model;
         this.player = player;
         this.levelManager = levelManager;
+        this.audioController = audioController;
+    }
+
+    /**
+     * Runs one gameplay tick, then reacts to what happened in it
+     * (death, respawn, level completed).
+     */
+    public void updateGameplay() {
+        updatePlaying();
+
+        if (checkIsDead()) {
+            audioController.playDead();
+            levelManager.getCurrentLvl().triggerSpawnPlatform();
+        }
+
+        if (checkIsRespawn()) {
+            audioController.playRespawn();
+            levelManager.getCurrentLvl().resetPlatforms();
+        }
+
+        if (checkIsEndOfLevel()) {
+            model.recordLevelCompletion();
+            audioController.playNextLevel();
+            player.resetLevelEnd();
+        }
     }
 
     /**
@@ -78,6 +108,7 @@ public class GameController {
     /**
      * Handles player death event - increments death counter
      */
+    @Override 
     public void onPlayerDeath() {
         model.incrementTotalDeathsForRun();
     }

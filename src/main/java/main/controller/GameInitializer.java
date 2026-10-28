@@ -14,6 +14,7 @@ import main.view.states.Leaderboard;
 import main.view.states.LevelSelect;
 import main.view.states.MainMenu;
 import utilities.LoadSave;
+import audio.controller.AudioController;
 
 public class GameInitializer {
 
@@ -28,13 +29,13 @@ public class GameInitializer {
     private final Leaderboard leaderboard;
     private final GameStateManager gameStateManager;
 
-    public GameInitializer(Game game) {
+    public GameInitializer(Game game, AudioController audioController) {
         levelManager = new LevelManager(game);
         player = new Player(200, 550, (int) (32 * Game.SCALE), (int) (32 * Game.SCALE));
-        player.setPlayerEventListener(game);
 
         model = new GameModel(player, levelManager);
-        controller = new GameController(model, player, levelManager);
+        controller = new GameController(model, player, levelManager, audioController);
+        player.setPlayerEventListener(controller);
         view = new GameView(model, Game.GAME_WIDTH, Game.GAME_HEIGHT);
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
 
@@ -42,7 +43,7 @@ public class GameInitializer {
         levelSelect = new LevelSelect(game, levelManager);
         leaderboard = new Leaderboard(game);
 
-        gameStateManager = new GameStateManager(new GamingState(game), new MenuState(game),
+        gameStateManager = new GameStateManager(new GamingState(game, controller, view), new MenuState(game),
                 new LeaderboardState(game), new LevelSelectState(game));
     }
 

@@ -3,25 +3,20 @@ package main.controller;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import audio.controller.AudioController;
 import main.model.GameModel;
 import main.model.entities.Player;
 import main.model.levels.Level;
 import main.model.levels.LevelManager;
-import main.model.observerEvents.GameEventListener;
-import main.model.observerEvents.PlayerEventListener;
 import main.view.GamePanel;
 import main.view.GameView;
 import main.view.GameWindow;
 import main.view.states.Leaderboard;
 import main.view.states.LevelSelect;
 import main.view.states.MainMenu;
-import utilities.LoadSave;
 
-public class Game extends PlayerEventListener {
+public class Game {
 
     public static final int TILES_DEAFULT_SIZE = 32;
     public static final float SCALE = 1.0f;
@@ -48,7 +43,6 @@ public class Game extends PlayerEventListener {
     private GameStateManager gameStateManager;
     private BufferedImage transitionImage;
 
-    private final List<GameEventListener> gameEventListeners = new ArrayList<>();
     private GameModel model;
     private GameController controller;
     private GameView view;
@@ -66,7 +60,7 @@ public class Game extends PlayerEventListener {
     }
 
     private void initClasses() {
-        GameInitializer init = new GameInitializer(this);
+        GameInitializer init = new GameInitializer(this, audioController);
         levelManager = init.getLevelManager();
         player = init.getPlayer();
         model = init.getModel();
@@ -112,36 +106,6 @@ public class Game extends PlayerEventListener {
 
         view.renderTransition(g, transitionImage);
     }
-
-    //TODO maybe check if we can move this into observer patterns?
-    public void updateGameState() {
-        controller.updatePlaying();
-
-        //TODO Abstract so that it listens for "PlayerDeath"
-        if (controller.checkIsDead()) {
-            audioController.playDead();
-            levelManager.getCurrentLvl().triggerSpawnPlatform();
-        }
-
-        ///TODO Abstract so that it listens for "PlayerRespawn"
-        if (controller.checkIsRespawn()) {
-            audioController.playRespawn();
-            levelManager.getCurrentLvl().resetPlatforms();
-        }
-
-        //TODO Abstract so that it listens for "LvlCompletedEvent"
-        if (controller.checkIsEndOfLevel()) {
-            levelCompletedScoringUpdate();
-            audioController.playNextLevel();
-
-            player.resetLevelEnd();
-        }
-    }
-
-    public void renderGame(Graphics g) {
-        view.renderGame(g);
-    }
-
 
     public Player getPlayer() {
         return player;
@@ -206,33 +170,6 @@ public class Game extends PlayerEventListener {
                 && oldState == GameStateManager.GameState.LEVEL_SELECT) {
             loadPlayerForCurrentLevel();
         }
-    }
-
-
-    //TODO move into EventListner / Observer abstration here?
-    @Override
-    public void onPlayerDeath() {
-        controller.onPlayerDeath();
-
-        for (GameEventListener listener : gameEventListeners) {
-            listener.onPlayerDeath();
-        }
-    }
-
-    //TODO move into EventListner / Observer abstration here?
-    public void levelCompletedScoringUpdate() {
-        long runEndTimeNanos = System.nanoTime();
-        double timeSeconds = (runEndTimeNanos - model.getRunStartTimeNanos()) / 1000000000.0;
-        int levelIndex = levelManager.getCurrentLevelIndex();
-        LoadSave.appendToScoreFile(model.getPlayerName(), levelIndex, timeSeconds, model.getTotalDeathsForRun());
-
-        for (GameEventListener listener : gameEventListeners) {
-            listener.onLevelCompleted(levelIndex, model.getTotalDeathsForRun(), timeSeconds);
-        }
-    }
-
-    public void togglePause() {
-        model.togglePause();
     }
 
     public LevelManager getLevelManager() {
