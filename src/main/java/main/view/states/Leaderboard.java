@@ -9,10 +9,11 @@ import java.util.Comparator;
 import java.util.List;
 
 import main.controller.Game;
+import main.model.levels.LevelManager;
 import utilities.LoadSave;
 
 public class Leaderboard {
-    private final Game game;
+    private final LevelManager levelManager;
     private final Font titleFont = new Font("Arial", Font.BOLD, 48);
     private final Font headerFont = new Font("Arial", Font.BOLD, 24);
     private final Font rowFont = new Font("Arial", Font.PLAIN, 20);
@@ -20,8 +21,8 @@ public class Leaderboard {
     // Track which level's leaderboard is currently shown +1
     private int currentLevelIndex = 0;
 
-    public Leaderboard(Game game) {
-        this.game = game;
+    public Leaderboard(LevelManager levelManager) {
+        this.levelManager = levelManager;
     }
 
     public void update() {
@@ -84,28 +85,24 @@ public class Leaderboard {
 
     //Switch the levels using keyboard in leaderboards
     public void nextLevel() {
-        int totalLevels = 1;
+        int totalLevels = levelManager.getLevelCount();
 
-        if (game != null) {
-            totalLevels = game.getLevelManager().getLevelCount();
-            if (totalLevels <= 0) {
-                totalLevels = 1;
-            }
+        if (totalLevels <= 0) {
+            totalLevels = 1;
         }
 
         currentLevelIndex = (currentLevelIndex + 1) % totalLevels;
     }
 
     public void previousLevel() {
-        int totalLevels = 1;
+        int totalLevels = levelManager.getLevelCount();
 
-        if (game != null) {
-            totalLevels = game.getLevelManager().getLevelCount();
-            if (totalLevels <= 0) {
-                totalLevels = 1;
-            }
+        if (totalLevels <= 0) {
+            totalLevels = 1;
         }
-        currentLevelIndex = (currentLevelIndex - 1 + totalLevels) % totalLevels;
+
+        currentLevelIndex =
+                (currentLevelIndex - 1 + totalLevels) % totalLevels;
     }
 
     public void draw(Graphics g) {

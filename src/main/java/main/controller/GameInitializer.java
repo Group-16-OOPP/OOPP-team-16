@@ -2,6 +2,7 @@ package main.controller;
 
 import java.awt.image.BufferedImage;
 
+import audio.controller.AudioController;
 import main.model.GameModel;
 import main.model.entities.Player;
 import main.model.levels.LevelManager;
@@ -14,7 +15,6 @@ import main.view.states.Leaderboard;
 import main.view.states.LevelSelect;
 import main.view.states.MainMenu;
 import utilities.LoadSave;
-import audio.controller.AudioController;
 
 public class GameInitializer {
 
@@ -39,9 +39,9 @@ public class GameInitializer {
         view = new GameView(model, Game.GAME_WIDTH, Game.GAME_HEIGHT);
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
 
-        mainMenu = new MainMenu(game);
-        levelSelect = new LevelSelect(game, levelManager);
-        leaderboard = new Leaderboard(game);
+        mainMenu = new MainMenu(model, game::setGameState);
+        levelSelect = new LevelSelect(levelManager, game::setGameState);
+        leaderboard = new Leaderboard(levelManager);
 
         gameStateManager = new GameStateManager(new GamingState(game, controller, view), new MenuState(game),
                 new LeaderboardState(game), new LevelSelectState(game));
