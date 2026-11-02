@@ -4,22 +4,29 @@ import java.awt.Graphics;
 
 import audio.controller.AudioController;
 import main.controller.Game;
+import main.controller.GameController;
+import main.view.GameView;
 
 //State responsible for gameplay (levels, player, HUD, pause, transitions)
 public class GamingState extends GameBaseState {
 
-    public GamingState(Game game) {
+    private final GameController controller;
+    private final GameView view;
+
+    public GamingState(Game game, GameController controller, GameView view) {
         super(game);
+        this.controller = controller;
+        this.view = view;
     }
 
     @Override
     public void update() {
-        game.updateGameState();
+        controller.updateGameplay();
     }
 
     @Override
     public void render(Graphics g) {
-        game.renderGame(g);
+        view.renderGame(g);
     }
 
     @Override
