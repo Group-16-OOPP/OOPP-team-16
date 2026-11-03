@@ -7,8 +7,10 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import main.controller.GameStateManager;
+import java.util.function.Consumer;
+
 import main.controller.Game;
+import main.controller.GameStateManager;
 import main.model.levels.LevelManager;
 import utilities.LoadSave;
 
@@ -21,8 +23,8 @@ public class LevelSelect {
     private static final int PREVIEW_SPACING = 30;
 
     //variables
-    private Game game;
-    private LevelManager levelManager;
+    private final LevelManager levelManager;
+    private final Consumer<GameStateManager.GameState> stateChangeAction;
     private ArrayList<Rectangle> levelBounds = new ArrayList<>();
     private ArrayList<BufferedImage> levelPreviews = new ArrayList<>();
     private BufferedImage lockImage;
@@ -41,9 +43,10 @@ public class LevelSelect {
         NORMAL, HOVER, CLICK
     }
 
-    public LevelSelect(Game game, LevelManager levelManager) {
-        this.game = game;
+    public LevelSelect(LevelManager levelManager, Consumer<GameStateManager.GameState> stateChangeAction) {
         this.levelManager = levelManager;
+        this.stateChangeAction = stateChangeAction;
+
         loadLevelPreviews();
         loadButtonImages();
         calculateLevelBounds();
@@ -226,7 +229,7 @@ public class LevelSelect {
     public void mouseReleased(int x, int y) {
         // Check back button release
         if (backButtonBounds.contains(x, y) && backButtonState == ButtonState.CLICK) {
-            game.setGameState(GameStateManager.GameState.MENU);
+            stateChangeAction.accept(GameStateManager.GameState.MENU);
             backButtonState = ButtonState.NORMAL;
             return;
         }
@@ -243,13 +246,13 @@ public class LevelSelect {
         
         // Set the current level index and start playing
         levelManager.setCurrentLevelIndex(levelIndex);
-        game.setGameState(GameStateManager.GameState.PLAYING);
+        stateChangeAction.accept(GameStateManager.GameState.PLAYING);
     }
 
     public void mouseClicked(int x, int y) {
         // Back button click
         if (backButtonBounds.contains(x, y)) {
-            game.setGameState(GameStateManager.GameState.MENU);
+            stateChangeAction.accept(GameStateManager.GameState.MENU);
             return;
         }
 

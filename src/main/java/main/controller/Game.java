@@ -130,15 +130,6 @@ public class Game {
         return model;
     }
 
-    //PLAYER NAME METHODS
-    public String getPlayerName() {
-        return model.getPlayerName();
-    }
-
-    public void setPlayerName(String playerName) {
-        model.setPlayerName(playerName);
-    }
-
     //GAME STATING
     public void setGameState(GameStateManager.GameState newState) { 
         GameStateManager.GameState oldState = gameStateManager.getGameState();
@@ -172,7 +163,4 @@ public class Game {
         }
     }
 
-    public LevelManager getLevelManager() {
-        return model.getLevelManager();
-    }
 }

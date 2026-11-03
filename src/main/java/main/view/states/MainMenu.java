@@ -7,11 +7,15 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import main.controller.GameStateManager;
+import java.util.function.Consumer;
+
 import main.controller.Game;
+import main.controller.GameStateManager;
+import main.model.GameModel;
 
 public class MainMenu {
-    private Game game;
+    private final GameModel model;
+    private final Consumer<GameStateManager.GameState> stateChangeAction;
     private ArrayList<String> options = new ArrayList<>();
     private ArrayList<Rectangle> bounds = new ArrayList<>();
     private int selected = -1;
@@ -32,8 +36,9 @@ public class MainMenu {
         NORMAL, HOVER, CLICK
     }
 
-    public MainMenu(Game game) {
-        this.game = game;
+    public MainMenu(GameModel model, Consumer<GameStateManager.GameState> stateChangeAction) {
+        this.model = model;
+        this.stateChangeAction = stateChangeAction;
 
         options.add("PLAY"); // index 0
         options.add("CHANGE PLAYER"); // index 1
@@ -137,7 +142,7 @@ public class MainMenu {
 
         // current player name
         g.setFont(new Font("Arial", Font.BOLD, 20));
-        String nameText = "Player: " + game.getPlayerName();
+        String nameText = "Player: " + model.getPlayerName();
         g.drawString(nameText, 20, 40);
 
         // the several options displayed:
@@ -236,16 +241,16 @@ public class MainMenu {
     private void handleSelection(int choice) {
         switch (choice) {
         case 0:
-            game.setGameState(GameStateManager.GameState.PLAYING);
+            stateChangeAction.accept(GameStateManager.GameState.PLAYING);
             break;
         case 1: // Change Name
             startEditingName();
             break;
         case 2: // Select Level
-            game.setGameState(GameStateManager.GameState.LEVEL_SELECT);
+            stateChangeAction.accept(GameStateManager.GameState.LEVEL_SELECT);
             break;
         case 3: // Leaderboard
-            game.setGameState(GameStateManager.GameState.LEADERBOARD);
+            stateChangeAction.accept(GameStateManager.GameState.LEADERBOARD);
             break;
         case 4: // Quit
             System.exit(0);
@@ -258,7 +263,7 @@ public class MainMenu {
     private void startEditingName() {
         editingName = true;
         nameBuffer.setLength(0);
-        nameBuffer.append(game.getPlayerName());
+        nameBuffer.append(model.getPlayerName());
     }
 
     public boolean isEditingName() {
@@ -272,7 +277,7 @@ public class MainMenu {
 
         if (keyCode == java.awt.event.KeyEvent.VK_ENTER) {
             if (!nameBuffer.isEmpty()) {
-                game.setPlayerName(nameBuffer.toString());
+                model.setPlayerName(nameBuffer.toString());
             }
             editingName = false;
             return;
