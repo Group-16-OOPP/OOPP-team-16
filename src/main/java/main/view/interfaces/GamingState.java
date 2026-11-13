@@ -3,7 +3,6 @@ package main.view.interfaces;
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
-import main.controller.Game;
 import main.controller.GameController;
 import main.view.GameView;
 
@@ -13,8 +12,7 @@ public class GamingState extends GameBaseState {
     private final GameController controller;
     private final GameView view;
 
-    public GamingState(Game game, GameController controller, GameView view) {
-        super(game);
+    public GamingState(GameController controller, GameView view) {
         this.controller = controller;
         this.view = view;
     }

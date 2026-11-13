@@ -4,9 +4,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import audio.controller.AudioController;
-import main.controller.Game;
 import main.controller.GameStateManager;
 import main.controller.inputs.commands.Command;
 import main.controller.inputs.commands.GoToMenuCommand;
@@ -19,25 +19,33 @@ import main.controller.inputs.commands.MoveRightReleaseCommand;
 import main.controller.inputs.commands.TogglePauseCommand;
 import main.model.GameModel;
 import main.model.entities.Player;
+import main.view.states.Leaderboard;
+import main.view.states.MainMenu;
 
 public class KeyboardInputs implements KeyListener {
     private final Player player;
     private final AudioController audioController;
     private final GameStateManager gameStateManager;
     private final GameModel model;
-    private final Game game; /// Game refrence only kept for menu refactor,,,,
     private boolean keyDown = false;
+
+    private final MainMenu mainMenu;
+    private final Leaderboard leaderboard;
+    private final Consumer<GameStateManager.GameState> stateChangeAction;
 
     private final Map<Integer, Command> pressedCommands = new HashMap<>();
     private final Map<Integer, Command> releasedCommands = new HashMap<>();
 
     public KeyboardInputs(Player player, AudioController audioController, 
-        GameModel model, GameStateManager gameStateManager,Game game) {
-        this.audioController = audioController;
-        this.gameStateManager = gameStateManager;
+        GameModel model, GameStateManager gameStateManager, MainMenu mainMenu, Leaderboard leaderboard,
+              Consumer<GameStateManager.GameState> stateChangeAction) {
         this.player = player;
+        this.audioController = audioController;
         this.model = model;
-        this.game = game;
+        this.gameStateManager = gameStateManager;
+        this.mainMenu = mainMenu;
+        this.leaderboard = leaderboard;
+        this.stateChangeAction = stateChangeAction;
         initCommands();
     }
 
@@ -54,7 +62,7 @@ public class KeyboardInputs implements KeyListener {
 
         // control
         Command togglePause = new TogglePauseCommand(model);
-        Command goToMenu = new GoToMenuCommand(game); // game stays for menu interactions ONLY(for now)
+        Command goToMenu = new GoToMenuCommand(stateChangeAction); // game stays for menu interactions ONLY(for now)
 
         // map keys to commands (press)
         pressedCommands.put(KeyEvent.VK_A, moveLeftPress);
@@ -83,8 +91,8 @@ public class KeyboardInputs implements KeyListener {
     private boolean isEditingName() {
         return gameStateManager.getGameState() == 
                GameStateManager.GameState.MENU && // Game stays for Menu interactions ONLY(for now)
-               game.mainMenu != null &&
-               game.mainMenu.isEditingName();
+               mainMenu != null &&
+               mainMenu.isEditingName();
     }
 
     private boolean isJumpKey(int keyCode) {
@@ -97,7 +105,7 @@ public class KeyboardInputs implements KeyListener {
     public void keyTyped(KeyEvent e) {
         // when editing name in main menu, collect characters here
         if (isEditingName()) {
-            game.mainMenu.handleNameKeyPressed(0, e.getKeyChar());
+            mainMenu.handleNameKeyPressed(0, e.getKeyChar());
         }
     }
 
@@ -106,7 +114,7 @@ public class KeyboardInputs implements KeyListener {
         if (isEditingName()) {
             int code = e.getKeyCode();
             if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_BACK_SPACE) {
-                game.mainMenu.handleNameKeyPressed(code, '\0');
+                mainMenu.handleNameKeyPressed(code, '\0');
             }
             return;
         }
@@ -114,12 +122,12 @@ public class KeyboardInputs implements KeyListener {
         int keyCode = e.getKeyCode();
 
         // LEFT/RIGHT navigation for leaderboarding...
-        if (game.getGameState() == GameStateManager.GameState.LEADERBOARD) {
+        if (gameStateManager.getGameState() == GameStateManager.GameState.LEADERBOARD) {
             if (keyCode == KeyEvent.VK_LEFT) {
-                game.leaderboard.previousLevel();
+                leaderboard.previousLevel();
                 return;
             } else if (keyCode == KeyEvent.VK_RIGHT) {
-                game.leaderboard.nextLevel();
+                leaderboard.nextLevel();
                 return;
             }
         }

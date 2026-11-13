@@ -1,18 +1,19 @@
 package main.controller.inputs.commands;
+
+import java.util.function.Consumer;
+
 import main.controller.GameStateManager;
-import main.controller.Game;
 
 public class GoToMenuCommand implements Command {
 
-    private final Game game;
+    private final Consumer<GameStateManager.GameState> stateChangeAction;
 
-    public GoToMenuCommand(Game game) {
-        this.game = game;
+    public GoToMenuCommand(Consumer<GameStateManager.GameState> stateChangeAction) {
+        this.stateChangeAction = stateChangeAction;
     }
 
     @Override
     public void execute() {
-        game.setGameState(GameStateManager.GameState.MENU);
+        stateChangeAction.accept(GameStateManager.GameState.MENU);
     }
 }
-

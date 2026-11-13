@@ -3,23 +3,25 @@ package main.view.interfaces;
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
-import main.controller.Game;
+import main.view.states.LevelSelect;
 
 //level selection screen
 public class LevelSelectState extends GameBaseState {
 
-    public LevelSelectState(Game game) {
-        super(game);
+    private final LevelSelect levelSelect;
+
+    public LevelSelectState(LevelSelect levelSelect) {
+        this.levelSelect = levelSelect;
     }
 
     @Override
     public void update() {
-        game.levelSelect.update();
+        levelSelect.update();
     }
 
     @Override
     public void render(Graphics g) {
-        game.levelSelect.draw(g);
+        levelSelect.draw(g);
     }
 
     @Override
