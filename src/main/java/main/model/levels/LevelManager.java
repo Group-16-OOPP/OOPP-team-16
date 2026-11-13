@@ -12,9 +12,11 @@ import static main.controller.Game.GAME_HEIGHT;
 import static main.controller.Game.GAME_WIDTH;
 import static main.controller.Game.TILES_SIZE;
 import utilities.LoadSave;
+import java.util.function.Consumer;
+import audio.controller.AudioController;
+import main.model.entities.Player;
 
 public class LevelManager {
-    private Game game;
     private BufferedImage[] levelSprite;
     private BufferedImage[] objectSprite;
     private BufferedImage spawnTube;
@@ -23,13 +25,20 @@ public class LevelManager {
     private int currentLevelIndex = 0;
     private Set<Integer> completedLevels = new HashSet<>();
 
+    private final AudioController audioController;
+    private final Player player;
+    private final Runnable reloadPlayerAction;
+    private final Consumer<GameStateManager.GameState> stateChangeAction;
 
-    public LevelManager(Game game) {
-        this.game = game;
+    public LevelManager(AudioController audioController, Player player, Runnable reloadPlayerAction,
+            Consumer<GameStateManager.GameState> stateChangeAction) {
+        this.audioController = audioController;
+        this.player = player;
+        this.reloadPlayerAction = reloadPlayerAction;
+        this.stateChangeAction = stateChangeAction;
         importOutsideSprites();
         buildAllLevels();
-        // Level 1 is always unlocked
-        completedLevels.add(0);
+        completedLevels.add(0); // level 1 is always unlocked
     }
 
     private void buildAllLevels() {
@@ -45,7 +54,7 @@ public class LevelManager {
                 LoadSave.getLevelObjData(LoadSave.LEVEL_ONE_OBJ_DATA),
                 config1.spawnX, config1.spawnY);
         LevelConfigLoader.applyConfig(level1, config1, levelSprite, objectSprite, spawnTube);
-        level1.setAudioControllerForPlatforms(game.getAudioController());
+        level1.setAudioControllerForPlatforms(audioController);
         levels.add(level1);
 
         // Level 2
@@ -56,7 +65,7 @@ public class LevelManager {
                 LoadSave.getLevelObjData(LoadSave.LEVEL_TWO_OBJ_DATA),
                 config2.spawnX, config2.spawnY);
         LevelConfigLoader.applyConfig(level2, config2, levelSprite, objectSprite, spawnTube);
-        level2.setAudioControllerForPlatforms(game.getAudioController());
+        level2.setAudioControllerForPlatforms(audioController);
         levels.add(level2);
 
         // Level 3
@@ -67,7 +76,7 @@ public class LevelManager {
                 LoadSave.getLevelObjData(LoadSave.LEVEL_THREE_OBJ_DATA),
                 config3.spawnX, config3.spawnY);
         LevelConfigLoader.applyConfig(level3, config3, levelSprite, objectSprite, spawnTube);
-        level3.setAudioControllerForPlatforms(game.getAudioController());
+        level3.setAudioControllerForPlatforms(audioController);
         levels.add(level3);
 
         // Level 4
@@ -78,7 +87,7 @@ public class LevelManager {
                 LoadSave.getLevelObjData(LoadSave.LEVEL_FOUR_OBJ_DATA),
                 config4.spawnX, config4.spawnY);
         LevelConfigLoader.applyConfig(level4, config4, levelSprite, objectSprite, spawnTube);
-        level4.setAudioControllerForPlatforms(game.getAudioController());
+        level4.setAudioControllerForPlatforms(audioController);
         levels.add(level4);
 
         // Level 5
@@ -89,7 +98,7 @@ public class LevelManager {
                 LoadSave.getLevelObjData(LoadSave.LEVEL_FIVE_OBJ_DATA),
                 config5.spawnX, config5.spawnY);
         LevelConfigLoader.applyConfig(level5, config5, levelSprite, objectSprite, spawnTube);
-        level5.setAudioControllerForPlatforms(game.getAudioController());
+        level5.setAudioControllerForPlatforms(audioController);
         levels.add(level5);
 
         // Level 6
@@ -100,7 +109,7 @@ public class LevelManager {
                 LoadSave.getLevelObjData(LoadSave.LEVEL_SIX_OBJ_DATA),
                 config6.spawnX, config6.spawnY);
         LevelConfigLoader.applyConfig(level6, config6, levelSprite, objectSprite, spawnTube);
-        level6.setAudioControllerForPlatforms(game.getAudioController());
+        level6.setAudioControllerForPlatforms(audioController);
         levels.add(level6);
 
         // Level 7
@@ -111,7 +120,7 @@ public class LevelManager {
                 LoadSave.getLevelObjData(LoadSave.LEVEL_SEVEN_OBJ_DATA),
                 config7.spawnX, config7.spawnY);
         LevelConfigLoader.applyConfig(level7, config7, levelSprite, objectSprite, spawnTube);
-        level7.setAudioControllerForPlatforms(game.getAudioController());
+        level7.setAudioControllerForPlatforms(audioController);
         levels.add(level7);
     }
 
@@ -135,7 +144,7 @@ public class LevelManager {
         }
     }
 
-    //TODO move into view?
+    //7TODO move into view?
     public void draw(Graphics g) {
         BufferedImage img = LoadSave.getSpriteAtlas(LoadSave.BG_DATA);
         g.drawImage(img, 0, 0, GAME_WIDTH, GAME_HEIGHT, null);
@@ -173,8 +182,8 @@ public class LevelManager {
     }
 
     public void update() {
-        getCurrentLvl().updatePlatforms(game.getPlayer());
-        getCurrentLvl().updateTriggerSpikes(game.getPlayer());
+        getCurrentLvl().updatePlatforms(player);
+        getCurrentLvl().updateTriggerSpikes(player);
         getCurrentLvl().updateSpawnPlatform();
     }
 
@@ -190,14 +199,10 @@ public class LevelManager {
         if (currentLevelIndex < levels.size() - 1) {
             currentLevelIndex++;
 
-            if (game != null) {
-                game.reloadPlayerForCurrentLevel();
-            }
+            reloadPlayerAction.run();
         } else {
             // Last level completed - return to main menu
-            if (game != null) {
-                game.setGameState(GameStateManager.GameState.MENU);
-            }
+            stateChangeAction.accept(GameStateManager.GameState.MENU);
         }
     }
 

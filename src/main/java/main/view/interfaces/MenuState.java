@@ -3,23 +3,25 @@ package main.view.interfaces;
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
-import main.controller.Game;
+import main.view.states.MainMenu;
 
 // rendering and updating the main menu
 public class MenuState extends GameBaseState {
 
-    public MenuState(Game game) {
-        super(game);
+    private final MainMenu mainMenu;
+
+    public MenuState(MainMenu mainMenu) {
+        this.mainMenu = mainMenu;
     }
 
     @Override
     public void update() {
-        game.mainMenu.update();
+        mainMenu.update();
     }
 
     @Override
     public void render(Graphics g) {
-        game.mainMenu.draw(g);
+        mainMenu.draw(g);
     }
 
     @Override

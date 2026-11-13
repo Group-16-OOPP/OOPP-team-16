@@ -2,25 +2,23 @@ package main.view;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.util.function.Consumer;
 
 import javax.swing.JPanel;
 
-import main.controller.Game;
 import static main.controller.Game.GAME_HEIGHT;
 import static main.controller.Game.GAME_WIDTH;
 import main.controller.inputs.KeyboardInputs;
 import main.controller.inputs.MouseInputs;
 
 public class GamePanel extends JPanel {
-    private MouseInputs mouseInputs;
-    private Game game;
+    private final Consumer<Graphics> renderAction;
 
-    public GamePanel(Game game) {
-        mouseInputs = new MouseInputs(game.getGameStateManager(),game);
-        this.game = game;
+    public GamePanel(Consumer<Graphics> renderAction, KeyboardInputs keyboardInputs,
+            MouseInputs mouseInputs) {
+        this.renderAction = renderAction;
         setPanelSize();
-        addKeyListener(new KeyboardInputs(game.getPlayer(),game.getAudioController(),
-            game.getGameModel(),game.getGameStateManager(), game));
+        addKeyListener(keyboardInputs);
         addMouseListener(mouseInputs);
         addMouseMotionListener(mouseInputs);
     }
@@ -36,10 +34,6 @@ public class GamePanel extends JPanel {
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        game.render(g);
-    }
-
-    public Game getGame() {
-        return game;
+        renderAction.accept(g);
     }
 }

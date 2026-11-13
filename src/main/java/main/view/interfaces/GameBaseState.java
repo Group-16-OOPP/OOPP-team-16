@@ -1,13 +1,8 @@
 package main.view.interfaces;
 import java.awt.Graphics;
-import main.controller.Game;
+
 
 public abstract class GameBaseState {
-    protected final Game game;
-
-    protected GameBaseState(Game game) {
-        this.game = game;
-    }
 
     //Called every update tick.
     public void update() {

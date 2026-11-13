@@ -3,6 +3,8 @@ package main.controller;
 import java.awt.image.BufferedImage;
 
 import audio.controller.AudioController;
+import main.controller.inputs.KeyboardInputs;
+import main.controller.inputs.MouseInputs;
 import main.model.GameModel;
 import main.model.entities.Player;
 import main.model.levels.LevelManager;
@@ -24,14 +26,14 @@ public class GameInitializer {
     private final GameController controller;
     private final GameView view;
     private final BufferedImage transitionImage;
-    private final MainMenu mainMenu;
-    private final LevelSelect levelSelect;
-    private final Leaderboard leaderboard;
     private final GameStateManager gameStateManager;
+    private final KeyboardInputs keyboardInputs;
+    private final MouseInputs mouseInputs;
 
     public GameInitializer(Game game, AudioController audioController) {
-        levelManager = new LevelManager(game);
         player = new Player(200, 550, (int) (32 * Game.SCALE), (int) (32 * Game.SCALE));
+        levelManager = new LevelManager(audioController, player,
+                game::reloadPlayerForCurrentLevel, game::setGameState);
 
         model = new GameModel(player, levelManager);
         controller = new GameController(model, player, levelManager, audioController);
@@ -39,12 +41,16 @@ public class GameInitializer {
         view = new GameView(model, Game.GAME_WIDTH, Game.GAME_HEIGHT);
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
 
-        mainMenu = new MainMenu(model, game::setGameState);
-        levelSelect = new LevelSelect(levelManager, game::setGameState);
-        leaderboard = new Leaderboard(levelManager);
+        MainMenu mainMenu = new MainMenu(model, game::setGameState);
+        LevelSelect levelSelect = new LevelSelect(levelManager, game::setGameState);
+        Leaderboard leaderboard = new Leaderboard(levelManager);
 
-        gameStateManager = new GameStateManager(new GamingState(game, controller, view), new MenuState(game),
-                new LeaderboardState(game), new LevelSelectState(game));
+        gameStateManager = new GameStateManager(new GamingState(controller, view), new MenuState(mainMenu),
+                new LeaderboardState(leaderboard), new LevelSelectState(levelSelect));
+
+        keyboardInputs = new KeyboardInputs(player, audioController, model, gameStateManager,
+                mainMenu, leaderboard, game::setGameState);
+        mouseInputs = new MouseInputs(gameStateManager, mainMenu, levelSelect);
     }
 
     public LevelManager getLevelManager() { return levelManager; }
@@ -53,8 +59,7 @@ public class GameInitializer {
     public GameController getController() { return controller; }
     public GameView getView() { return view; }
     public BufferedImage getTransitionImage() { return transitionImage; }
-    public MainMenu getMainMenu() { return mainMenu; }
-    public LevelSelect getLevelSelect() { return levelSelect; }
-    public Leaderboard getLeaderboard() { return leaderboard; }
     public GameStateManager getGameStateManager() { return gameStateManager; }
+    public KeyboardInputs getKeyboardInputs() { return keyboardInputs; }
+    public MouseInputs getMouseInputs() { return mouseInputs; }
 }
